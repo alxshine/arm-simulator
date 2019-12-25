@@ -1,19 +1,31 @@
 #pragma once
+#include "type_definitions.hpp"
 
-class Cpu{
+namespace ARMSimulator {
+
+class Cpu {
 private:
   static const long mem_size = 4096;
-  
-  int r[16];
+
+  int regs[16];
   unsigned char mem[mem_size];
-  unsigned char cspr;
+  unsigned bool Z, C, N, V;
 
 public:
   Cpu();
-  void dump_state();
+  void dumpRegisters();
 
-  void mov(int rd, int r1);
-  void mov_immediate(int rd, unsigned int immediate);
-  void add(int rd, int r1, int r2);
-  void add_immediate(int rd, int r1, unsigned int immediate);
+  int getRegister(Register r);
+  void setRegister(Register r, int value);
+
+  void mov(Register rd, Register r1, BarrelShifterConfig shifterConfig,
+           bool setFlags);
+  void mov(Register rd, int immediate, BarrelShifterConfig shifterConfig,
+           bool setFlags);
+  void add(Register rd, Register r1, Register r2,
+           BarrelShifterConfig shifterconfig, bool setFlags);
+  void add(Register rd, Register r1, int immediate,
+           BarrelShifterConfig shifterConfig, bool setFlags);
 };
+
+} // namespace ARMSimulator

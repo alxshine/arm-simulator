@@ -4,42 +4,31 @@
 
 using namespace std;
 
-Cpu::Cpu(){
+ARMSimulator::Cpu::Cpu() {
   for (int i = 0; i < mem_size; ++i) {
     mem[i] = 0;
   }
-  for (int i = 0; i < 15; ++i) {
-    r[i] = 0;
+  for (int i = 0; i < 16; ++i) {
+    regs[i] = 0;
   }
 
+  Z = C = N = V = 0;
 }
 
-void Cpu::dump_state(){
-  cout << "Dumping CPU state" << endl;
+void ARMSimulator::Cpu::dumpRegisters() {
+  cout << "ARM Registers:" << endl;
 
   for (int i = 0; i < 16; ++i) {
     cout << "r" << i;
-    if(i == 14)
+    if (i == 14)
       cout << "/lr";
-    if(i == 15)
+    if (i == 15)
       cout << "/pc";
 
-    cout << ":\t0x" << hex << r[i] << endl;
+    cout << ":\t0x" << hex << regs[i] << dec << endl;
   }
 }
 
-void Cpu::mov(int rd, int r1){
-  r[rd] = r[r1];
-}
+int ARMSimulator::Cpu::getRegister(Register r) { return regs[r]; }
 
-void Cpu::mov_immediate(int rd, unsigned int immediate){
-  r[rd] = immediate;
-}
-
-void Cpu::add(int rd, int r1, int r2){
-  r[rd] = r[r1] + r[r2];
-}
-
-void Cpu::add_immediate(int rd, int r1, unsigned int immediate){
-  r[rd] = r[r1] + immediate;
-}
+void ARMSimulator::Cpu::setRegister(Register r, int value) { regs[r] = value; }
