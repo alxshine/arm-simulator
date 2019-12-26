@@ -32,3 +32,8 @@ void ARMSimulator::Cpu::dumpRegisters() {
 int ARMSimulator::Cpu::getRegister(Register r) { return regs[r]; }
 
 void ARMSimulator::Cpu::setRegister(Register r, int value) { regs[r] = value; }
+
+// void ARMSimulator::Cpu::mov(Register rd, Register r1, BarrelShifterConfig shifterConfig,
+//          bool setFlags) {
+  
+// }

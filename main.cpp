@@ -1,4 +1,7 @@
 #include "cpu.hpp"
+#include "barrel_shifter.hpp"
+#include "type_definitions.hpp"
+
 #include <iostream>
 
 using namespace ARMSimulator;
@@ -9,7 +12,10 @@ int main(void)
   Cpu cpu;
   cpu.dumpRegisters();
 
-  cpu.setRegister(lr, 0x12233);
+  cpu.setRegister(lr, 0x80000001);
   cout << hex << "0x" << cpu.getRegister(lr) << endl;
+
+  auto shiftResult = BarrelShifter::arithmeticShiftRight(cpu.getRegister(lr), 1);
+  cout << "Result: 0x" << shiftResult.value << ", carry: " << shiftResult.carry << endl;
   return 0;
 }

@@ -9,7 +9,7 @@ private:
 
   int regs[16];
   unsigned char mem[mem_size];
-  unsigned bool Z, C, N, V;
+  bool Z, C, N, V;
 
 public:
   Cpu();

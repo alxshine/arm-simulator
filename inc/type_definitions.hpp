@@ -30,10 +30,13 @@ enum class ShiftType {
   RotateRight
 };
 
-enum class ShiftOperandType { Immediate, Register };
-
 struct BarrelShifterConfig {
-  ShiftOperandType operandType;
   ShiftType type;
+  short shiftAmount;
+};
+
+struct BarrelShifterReturn {
+  int value;
+  bool carry;
 };
 } // namespace ARMSimulator
