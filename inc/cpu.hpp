@@ -25,7 +25,7 @@ public:
            BarrelShifterConfig shiftConfig = {ShiftType::LogicalLeft, 0},
            bool setFlags = false);
   void add(Register rd, Register r1, Register r2,
-           BarrelShifterConfig shiftconfig = {ShiftType::LogicalLeft, 0},
+           BarrelShifterConfig shiftConfig = {ShiftType::LogicalLeft, 0},
            bool setFlags = false);
   void add(Register rd, Register r1, int immediate,
            BarrelShifterConfig shiftConfig = {ShiftType::LogicalLeft, 0},
