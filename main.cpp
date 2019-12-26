@@ -15,7 +15,8 @@ int main(void)
   cpu.setRegister(lr, 0x11);
   cout << hex << "0x" << cpu.getRegister(lr) << endl;
 
-  auto shiftResult = BarrelShifter::rotateRight(cpu.getRegister(lr), 1);
+  BarrelShifterConfig config = {ShiftType::RotateRight, 2};
+  auto shiftResult = BarrelShifter::executeConfig(cpu.getRegister(lr), config);
   cout << "Result: 0x" << shiftResult.value << ", carry: " << shiftResult.carry << endl;
   return 0;
 }

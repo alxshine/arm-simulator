@@ -40,3 +40,20 @@ ARMSimulator::BarrelShifter::rotateRight(int input, short shiftAmount) {
   int result = input >> shiftAmount | input << (32 - shiftAmount);
   return {result, carry};
 }
+
+ARMSimulator::BarrelShifterReturn
+ARMSimulator::BarrelShifter::executeConfig(int input,
+                                           BarrelShifterConfig config) {
+  switch (config.type) {
+  case ARMSimulator::ShiftType::LogicalLeft:
+    return logicalShiftLeft(input, config.shiftAmount);
+  case ARMSimulator::ShiftType::LogicalRight:
+    return logicalShiftRight(input, config.shiftAmount);
+  case ARMSimulator::ShiftType::ArithmeticRight:
+    return arithmeticShiftRight(input, config.shiftAmount);
+  case ARMSimulator::ShiftType::RotateRight:
+    return rotateRight(input, config.shiftAmount);
+  default:
+    return {0, 0};
+  }
+}
