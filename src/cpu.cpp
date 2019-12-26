@@ -1,4 +1,5 @@
 #include "cpu.hpp"
+#include "barrel_shifter.hpp"
 
 #include <iostream>
 
@@ -33,7 +34,23 @@ int ARMSimulator::Cpu::getRegister(Register r) { return regs[r]; }
 
 void ARMSimulator::Cpu::setRegister(Register r, int value) { regs[r] = value; }
 
-// void ARMSimulator::Cpu::mov(Register rd, Register r1, BarrelShifterConfig shifterConfig,
-//          bool setFlags) {
-  
-// }
+void ARMSimulator::Cpu::mov(Register rd, Register r1,
+                            BarrelShifterConfig shiftConfig, bool setFlags) {
+  int input = getRegister(r1);
+  auto shiftResult =
+      ARMSimulator::BarrelShifter::executeConfig(input, shiftConfig);
+  if (setFlags)
+    C = shiftResult.carry;
+
+  setRegister(rd, shiftResult.value);
+}
+
+void ARMSimulator::Cpu::mov(Register rd, int immediate,
+                            BarrelShifterConfig shiftConfig, bool setFlags) {
+  auto shiftResult =
+      ARMSimulator::BarrelShifter::executeConfig(immediate, shiftConfig);
+  if (setFlags)
+    C = shiftResult.carry;
+
+  setRegister(rd, shiftResult.value);
+}

@@ -18,14 +18,18 @@ public:
   int getRegister(Register r);
   void setRegister(Register r, int value);
 
-  void mov(Register rd, Register r1, BarrelShifterConfig shifterConfig,
-           bool setFlags);
-  void mov(Register rd, int immediate, BarrelShifterConfig shifterConfig,
-           bool setFlags);
+  void mov(Register rd, Register r1,
+           BarrelShifterConfig shiftoConfig = {ShiftType::LogicalLeft, 0},
+           bool setFlags = false);
+  void mov(Register rd, int immediate,
+           BarrelShifterConfig shiftConfig = {ShiftType::LogicalLeft, 0},
+           bool setFlags = false);
   void add(Register rd, Register r1, Register r2,
-           BarrelShifterConfig shifterconfig, bool setFlags);
+           BarrelShifterConfig shiftconfig = {ShiftType::LogicalLeft, 0},
+           bool setFlags = false);
   void add(Register rd, Register r1, int immediate,
-           BarrelShifterConfig shifterConfig, bool setFlags);
+           BarrelShifterConfig shiftConfig = {ShiftType::LogicalLeft, 0},
+           bool setFlags = false);
 };
 
 } // namespace ARMSimulator

@@ -9,14 +9,12 @@ using namespace std;
 
 int main(void) {
   Cpu cpu;
-  cpu.dumpRegisters();
 
   cpu.setRegister(lr, 0x11);
-  cout << hex << "0x" << cpu.getRegister(lr) << endl;
-
   BarrelShifterConfig config = {ShiftType::RotateRight, 2};
-  auto shiftResult = BarrelShifter::executeConfig(cpu.getRegister(lr), config);
-  cout << "Result: 0x" << shiftResult.value << ", carry: " << shiftResult.carry
-       << endl;
+  cpu.mov(r0, 0x11, config);
+  cpu.mov(r1, r0, {ShiftType::LogicalLeft, 1});
+
+  cpu.dumpRegisters();
   return 0;
 }
