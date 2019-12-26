@@ -33,3 +33,10 @@ ARMSimulator::BarrelShifter::arithmeticShiftRight(int input,
   }
   return {result, carry};
 }
+
+ARMSimulator::BarrelShifterReturn
+ARMSimulator::BarrelShifter::rotateRight(int input, short shiftAmount) {
+  bool carry = input & 1 << (shiftAmount - 1);
+  int result = input >> shiftAmount | input << (32 - shiftAmount);
+  return {result, carry};
+}

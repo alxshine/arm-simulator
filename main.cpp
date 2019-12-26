@@ -12,10 +12,10 @@ int main(void)
   Cpu cpu;
   cpu.dumpRegisters();
 
-  cpu.setRegister(lr, 0x80000001);
+  cpu.setRegister(lr, 0x11);
   cout << hex << "0x" << cpu.getRegister(lr) << endl;
 
-  auto shiftResult = BarrelShifter::arithmeticShiftRight(cpu.getRegister(lr), 1);
+  auto shiftResult = BarrelShifter::rotateRight(cpu.getRegister(lr), 1);
   cout << "Result: 0x" << shiftResult.value << ", carry: " << shiftResult.carry << endl;
   return 0;
 }
