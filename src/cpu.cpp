@@ -46,7 +46,7 @@ void ARMSimulator::Cpu::setRegister(Register r, int value)
   regs[intRegister] = value;
 }
 
-void ARMSimulator::Cpu::mov(Register rd, RightHandOperand op2,
+void ARMSimulator::Cpu::MOV(Register rd, RightHandOperand op2,
                             BarrelShifterConfig shiftConfig, bool setFlags)
 {
   int input;
@@ -63,7 +63,7 @@ void ARMSimulator::Cpu::mov(Register rd, RightHandOperand op2,
   setRegister(rd, shiftResult.value);
 }
 
-void ARMSimulator::Cpu::add(Register rd, Register r1, RightHandOperand op2,
+void ARMSimulator::Cpu::ADD(Register rd, Register r1, RightHandOperand op2,
                             BarrelShifterConfig shiftConfig, bool setFlags)
 {
   int v1 = getRegister(r1);

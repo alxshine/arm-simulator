@@ -69,4 +69,22 @@ struct RightHandOperand
 
   RightHandOperand(Register reg) : type(OperandType::Register), value{reg} {}
 };
+
+enum OffsetDirection
+{
+  Down = 0,
+  Up = 1
+};
+
+enum TransferQuantity
+{
+  Word = 0,
+  Byte = 1
+};
+
+enum IndexingMethod
+{
+  PostIndexed = 0,
+  PreIndexed = 1
+};
 } // namespace ARMSimulator
