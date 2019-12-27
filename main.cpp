@@ -10,9 +10,9 @@ using namespace std;
 int main(void) {
   Cpu cpu;
 
-  cpu.setRegister(lr, 0x11);
-  cpu.mov(r0, 0x1);
-  cpu.add(r1, r0, 2, {ShiftType::LogicalLeft, 1});
+  cpu.setRegister(Register::lr, 0x11);
+  cpu.mov(Register::r0, 0x1);
+  cpu.add(Register::r1, Register::r0, Register::r0, {ShiftType::LogicalLeft, 1});
 
   cpu.dumpRegisters();
   return 0;
