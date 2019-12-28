@@ -16,5 +16,7 @@ int main(void) {
           true);
 
   cpu.dumpRegisters();
+
+  cpu.BX(0);
   return 0;
 }

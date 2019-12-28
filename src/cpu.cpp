@@ -1,5 +1,6 @@
 #include "cpu.hpp"
 #include "barrel_shifter.hpp"
+#include "exceptions.hpp"
 
 #include <iostream>
 
@@ -94,10 +95,41 @@ void ARMSimulator::Cpu::AND(Register rd, Register r1, RightHandOperand op2,
   setRegister(rd, result);
 
   if (setFlags) {
-    C = shiftResult.carry;
+    if (shiftResult.affectCarry) C = shiftResult.carry;
     N = result & (1 << 31);
     Z = result == 0;
   }
+}
+
+void ARMSimulator::Cpu::B(int address) { setRegister(Register::pc, address); }
+
+void ARMSimulator::Cpu::BIC(Register rd, Register r1, RightHandOperand op2,
+                            BarrelShifterConfig shiftConfig, bool setFlags) {
+  int v1 = getRegister(r1);
+  int v2 = getRightHandOperandValue(op2);
+  auto shiftResult =
+      ARMSimulator::BarrelShifter::executeConfig(v2, shiftConfig);
+  v2 = shiftResult.value;
+  int result = v1 & ~v2;
+  setRegister(rd, result);
+
+  if (setFlags) {
+    if (shiftResult.affectCarry) C = shiftResult.carry;
+    N = result & (1 << 31);
+    Z = result == 0;
+  }
+}
+
+void ARMSimulator::Cpu::BL(int address) {
+  int currentProgramCounter = getRegister(Register::pc);
+  // store address of next instruction so the return doesn't mess things up
+  int targetProgramCounter = currentProgramCounter + 4;
+  setRegister(Register::lr, targetProgramCounter);
+  setRegister(Register::pc, address);
+}
+
+void ARMSimulator::Cpu::BX(RightHandOperand) {
+  throw NotImplementedException("BX");
 }
 
 void ARMSimulator::Cpu::MOV(Register rd, RightHandOperand op2,
