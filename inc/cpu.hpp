@@ -120,7 +120,7 @@ class Cpu {
 
   int regs[16];
   unsigned char mem[mem_size];
-  bool Z, C, N, V;
+  bool N, Z, C, V;
 
   int getRightHandOperandValue(RightHandOperand operand);
 };

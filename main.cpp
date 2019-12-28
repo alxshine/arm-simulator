@@ -11,8 +11,9 @@ int main(void) {
   Cpu cpu;
 
   cpu.setRegister(Register::lr, 0x11);
-  cpu.MOV(Register::r0, 0x1);
-  cpu.ADD(Register::r1, Register::r0, Register::r0, {ShiftType::LogicalLeft, 1});
+  cpu.MOV(Register::r0, 0x80000000);
+  cpu.AND(Register::r1, Register::r0, Register::r0, {ShiftType::LogicalLeft, 0},
+          true);
 
   cpu.dumpRegisters();
   return 0;
