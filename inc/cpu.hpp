@@ -55,8 +55,7 @@ class Cpu {
            BarrelShifterConfig shiftConfig = {ShiftType::LogicalLeft, 0});
 
   void MOV(Register rd, RightHandOperand op2,
-           BarrelShifterConfig BarrelShifterConfig = {ShiftType::LogicalLeft,
-                                                      0},
+           BarrelShifterConfig shiftConfig = {ShiftType::LogicalLeft, 0},
            bool setFlags = false);
 
   void MRS(Register rd);
@@ -65,34 +64,28 @@ class Cpu {
 
   // TODO: MUL, MLA
   void MVN(Register rd, RightHandOperand op2,
-           BarrelShifterConfig BarrelShifterConfig = {ShiftType::LogicalLeft,
-                                                      0},
+           BarrelShifterConfig shiftConfig = {ShiftType::LogicalLeft, 0},
            bool setFlags = false);
 
   void ORR(Register rd, Register r1, RightHandOperand op2,
-           BarrelShifterConfig BarrelShifterConfig = {ShiftType::LogicalLeft,
-                                                      0},
+           BarrelShifterConfig shiftConfig = {ShiftType::LogicalLeft, 0},
            bool setFlags = false);
 
   void RSB(Register rd, Register r1, RightHandOperand op2,
-           BarrelShifterConfig BarrelShifterConfig = {ShiftType::LogicalLeft,
-                                                      0},
+           BarrelShifterConfig shiftConfig = {ShiftType::LogicalLeft, 0},
            bool setFlags = false);
 
   void RSC(Register rd, Register r1, RightHandOperand op2,
-           BarrelShifterConfig BarrelShifterConfig = {ShiftType::LogicalLeft,
-                                                      0},
+           BarrelShifterConfig shiftConfig = {ShiftType::LogicalLeft, 0},
            bool setFlags = false);
 
   void SBC(Register rd, Register r1, RightHandOperand op2,
-           BarrelShifterConfig BarrelShifterConfig = {ShiftType::LogicalLeft,
-                                                      0},
+           BarrelShifterConfig shiftConfig = {ShiftType::LogicalLeft, 0},
            bool setFlags = false);
 
-  void STM(Register rd, Register baseRegister, RightHandOperand offset,
-           bool addressWriteBack, TransferQuantity transferQuantity,
+  void STM(Register baseRegister, bool addressWriteBack, bool forceUserMode,
            OffsetDirection offsetDirection, IndexingMethod indexingMethod,
-           BarrelShifterConfig shiftConfig = {ShiftType::LogicalLeft, 0});
+           std::vector<Register> registerList);
 
   void STR(Register rd, Register baseRegister, RightHandOperand offset,
            bool addressWriteBack, TransferQuantity transferQuantity,
@@ -100,8 +93,7 @@ class Cpu {
            BarrelShifterConfig shiftConfig = {ShiftType::LogicalLeft, 0});
 
   void SUB(Register rd, Register r1, RightHandOperand op2,
-           BarrelShifterConfig BarrelShifterConfig = {ShiftType::LogicalLeft,
-                                                      0},
+           BarrelShifterConfig shiftConfig = {ShiftType::LogicalLeft, 0},
            bool setFlags = false);
 
   void SWI();
