@@ -16,10 +16,8 @@ bool hasOverflow(int result, int v1, int v2) {
 
 int getNegative(int input) { return ~input + 1; }
 
-ARMSimulator::Cpu::Cpu() {
-  for (int i = 0; i < mem_size; ++i) {
-    mem[i] = 0;
-  }
+ARMSimulator::Cpu::Cpu(unsigned int memorySize)
+    : memSize{memorySize}, mem(memorySize, 0) {
   for (int i = 0; i < 16; ++i) {
     regs[i] = 0;
   }
@@ -50,6 +48,35 @@ int ARMSimulator::Cpu::getRegister(Register r) {
 void ARMSimulator::Cpu::setRegister(Register r, int value) {
   int intRegister = static_cast<int>(r);
   regs[intRegister] = value;
+}
+
+int ARMSimulator::Cpu::getMemoryWord(unsigned int address) {
+  if (address >= memSize - 4) throw InvalidMemoryAccessException(address);
+
+  int result = mem[address] << 24 | mem[address + 1] << 16 |
+               mem[address + 2] << 8 | mem[address + 3];
+  return result;
+}
+
+void ARMSimulator::Cpu::setMemoryWord(unsigned int address, int value) {
+  if (address >= memSize - 4) throw InvalidMemoryAccessException(address);
+
+  mem[address] = value >> 24;
+  mem[address + 1] = value >> 16 & 0xFF;
+  mem[address + 2] = value >> 8 & 0xFF;
+  mem[address] = value & 0xFF;
+}
+
+char ARMSimulator::Cpu::getMemoryByte(unsigned int address) {
+  if (address >= memSize) throw InvalidMemoryAccessException(address);
+
+  return mem[address];
+}
+
+void ARMSimulator::Cpu::setMemoryByte(unsigned int address, char value) {
+  if (address >= memSize) throw InvalidMemoryAccessException(address);
+
+  mem[address] = value;
 }
 
 void ARMSimulator::Cpu::ADC(Register rd, Register r1, RightHandOperand op2,
@@ -103,7 +130,9 @@ void ARMSimulator::Cpu::AND(Register rd, Register r1, RightHandOperand op2,
   }
 }
 
-void ARMSimulator::Cpu::B(int address) { setRegister(Register::pc, address); }
+void ARMSimulator::Cpu::B(unsigned int address) {
+  setRegister(Register::pc, address);
+}
 
 void ARMSimulator::Cpu::BIC(Register rd, Register r1, RightHandOperand op2,
                             BarrelShifterConfig shiftConfig, bool setFlags) {
@@ -121,7 +150,7 @@ void ARMSimulator::Cpu::BIC(Register rd, Register r1, RightHandOperand op2,
   }
 }
 
-void ARMSimulator::Cpu::BL(int address) {
+void ARMSimulator::Cpu::BL(unsigned int address) {
   int currentProgramCounter = getRegister(Register::pc);
   // store address of next instruction so the return doesn't mess things up
   int targetProgramCounter = currentProgramCounter + 4;

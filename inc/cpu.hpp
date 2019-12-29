@@ -7,11 +7,16 @@ namespace ARMSimulator {
 
 class Cpu {
  public:
-  Cpu();
+  Cpu(unsigned int memorySize);
   void dumpRegisters();
 
   int getRegister(Register r);
   void setRegister(Register r, int value);
+
+  int getMemoryWord(unsigned int address);
+  void setMemoryWord(unsigned int address, int word);
+  char getMemoryByte(unsigned int address);
+  void setMemoryByte(unsigned int address, char byte);
 
   void ADC(Register rd, Register r1, RightHandOperand op2,
            BarrelShifterConfig shiftConfig = {ShiftType::LogicalLeft, 0},
@@ -25,13 +30,13 @@ class Cpu {
            BarrelShifterConfig shiftConfig = {ShiftType::LogicalLeft, 0},
            bool setFlags = false);
 
-  void B(int address);
+  void B(unsigned int address);
 
   void BIC(Register rd, Register r1, RightHandOperand op2,
            BarrelShifterConfig shiftConfig = {ShiftType::LogicalLeft, 0},
            bool setFlags = false);
 
-  void BL(int address);
+  void BL(unsigned int address);
 
   void BX(RightHandOperand address);
 
@@ -108,10 +113,9 @@ class Cpu {
            BarrelShifterConfig shiftConfig = {ShiftType::LogicalLeft, 0});
 
  private:
-  static const long mem_size = 4096;
-
+  unsigned int memSize;
   int regs[16];
-  unsigned char mem[mem_size];
+  std::vector<char> mem;
   bool N, Z, C, V;
 
   int getRightHandOperandValue(RightHandOperand operand);
