@@ -10,16 +10,19 @@ using namespace std;
 int main(void) {
   Cpu cpu(4096);
 
-  cpu.MOV(Register::r0, 0x12345678);
-  cpu.MOV(Register::r1, 0);
-  cpu.MOV(Register::r9, 0xFF00);
+  char data[] = "Hello, World!\n";
+  int len = 16;
+  unsigned int address = 0x100;
+  cpu.setMemory(address, (unsigned char*)data, len);
 
-  cpu.STM(Register::r1, true, Up, PostIndexed, {Register::r0, Register::r9});
-  cpu.LDM(Register::r1, true, Down, PreIndexed, {Register::r2, Register::r3});
+  cpu.MOV(Register::r0, 0);
+  cpu.MOV(Register::r1, address);
+  cpu.MOV(Register::r2, len);
+  cpu.MOV(Register::r7, 4);
+  cpu.SWI();
 
-  cpu.SWP(Register::r9, Register::r2, Register::r1);
-  cout << hex << cpu.getMemoryWord(0) << endl;
-
-  cpu.dumpRegisters();
+  cpu.MOV(Register::r0, 0);
+  cpu.MOV(Register::r7, 1);
+  cpu.SWI();
   return 0;
 }

@@ -2,6 +2,7 @@
 #include "barrel_shifter.hpp"
 #include "exceptions.hpp"
 
+#include <cstdlib>
 #include <iostream>
 
 using namespace std;
@@ -81,6 +82,14 @@ void ARMSimulator::Cpu::setMemoryByte(unsigned int address,
   if (address >= memSize) throw InvalidMemoryAccessException(address);
 
   mem[address] = value;
+}
+
+void ARMSimulator::Cpu::setMemory(unsigned int startAddress,
+                                  const unsigned char *bytes, int len) {
+  for (int i = 0; i < len; i++) {
+    unsigned int currentAddress = startAddress + i;
+    setMemoryByte(currentAddress, bytes[i]);
+  }
 }
 
 void ARMSimulator::Cpu::ADC(Register rd, Register r1, RightHandOperand op2,
@@ -442,7 +451,33 @@ void ARMSimulator::Cpu::SUB(Register rd, Register r1, RightHandOperand op2,
   }
 }
 
-void ARMSimulator::Cpu::SWI() { throw NotImplementedException("SWI"); }
+void ARMSimulator::Cpu::SWI() {
+  int syscall = getRegister(Register::r7);
+  if (syscall == 4) {
+    // print syscall
+    int output = getRegister(Register::r0);
+    unsigned int address = getRegister(Register::r1);
+    int length = getRegister(Register::r2);
+
+    for (int i = 0; i < length; i++) {
+      char currentChar = getMemoryByte(address);
+      if (currentChar == 0) break;
+
+      if (output == 0)
+        std::cout << currentChar;
+      else
+        std::cerr << currentChar;
+
+      address++;
+    }
+  } else if (syscall == 1) {
+    // exit syscall
+    int returnCode = getRegister(Register::r1);
+    exit(returnCode);
+  } else {
+    throw NotImplementedException("SWI");
+  }
+}
 
 void ARMSimulator::Cpu::SWP(Register destinationRegister,
                             Register sourceRegister, Register baseRegister) {

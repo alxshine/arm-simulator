@@ -17,6 +17,8 @@ class Cpu {
   void setMemoryWord(unsigned int address, int word);
   unsigned char getMemoryByte(unsigned int address);
   void setMemoryByte(unsigned int address, unsigned char byte);
+  void setMemory(unsigned int startAddress, const unsigned char* bytes,
+                 int len);
 
   void ADC(Register rd, Register r1, RightHandOperand op2,
            BarrelShifterConfig shiftConfig = {ShiftType::LogicalLeft, 0},
