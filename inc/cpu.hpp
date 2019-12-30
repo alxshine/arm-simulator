@@ -54,9 +54,10 @@ class Cpu {
            OffsetDirection offsetDirection, IndexingMethod indexingMethod,
            std::vector<Register> registerList);
 
-  void LDR(Register rd, Register baseRegister, RightHandOperand offset,
-           bool addressWriteBack, TransferQuantity transferQuantity,
-           OffsetDirection offsetDirection, IndexingMethod indexingMethod,
+  void LDR(Register destinationRegister, Register baseRegister,
+           RightHandOperand offset, bool addressWriteBack,
+           TransferQuantity transferQuantity, OffsetDirection offsetDirection,
+           IndexingMethod indexingMethod,
            BarrelShifterConfig shiftConfig = {ShiftType::LogicalLeft, 0});
 
   void MOV(Register rd, RightHandOperand op2,
@@ -116,7 +117,7 @@ class Cpu {
  private:
   unsigned int memSize;
   int regs[16];
-  std::vector<char> mem;
+  std::vector<unsigned char> mem;
   bool N, Z, C, V;
 
   int getRightHandOperandValue(RightHandOperand operand);

@@ -53,8 +53,11 @@ void ARMSimulator::Cpu::setRegister(Register r, int value) {
 int ARMSimulator::Cpu::getMemoryWord(unsigned int address) {
   if (address >= memSize - 4) throw InvalidMemoryAccessException(address);
 
-  int result = mem[address] << 24 | mem[address + 1] << 16 |
-               mem[address + 2] << 8 | mem[address + 3];
+  unsigned int b0 = mem[address] << 24;
+  unsigned int b1 = mem[address + 1] << 16;
+  unsigned int b2 = mem[address + 2] << 8;
+  unsigned int b3 = mem[address + 3];
+  unsigned int result = b0 | b1 | b2 | b3;
   return result;
 }
 
@@ -214,10 +217,40 @@ void ARMSimulator::Cpu::LDM(Register, bool, bool, OffsetDirection,
   throw NotImplementedException("LDM");
 }
 
-void ARMSimulator::Cpu::LDR(Register, Register, RightHandOperand, bool,
-                            TransferQuantity, OffsetDirection, IndexingMethod,
-                            BarrelShifterConfig) {
-  throw NotImplementedException("LDR");
+void ARMSimulator::Cpu::LDR(Register destinationRegister, Register baseRegister,
+                            RightHandOperand offsetOperand,
+                            bool addressWriteBack,
+                            TransferQuantity transferQuantity,
+                            OffsetDirection offsetDirection,
+                            IndexingMethod indexingMethod,
+                            BarrelShifterConfig shiftConfig) {
+  unsigned int baseAddress = getRegister(baseRegister);
+  int offset = getRightHandOperandValue(offsetOperand);
+  offset = BarrelShifter::executeConfig(offset, shiftConfig).value;
+  unsigned int targetAddress = baseAddress;
+
+  if (indexingMethod == PreIndexed) {
+    if (offsetDirection == Up)
+      targetAddress = baseAddress + offset;
+    else
+      targetAddress = baseAddress - offset;
+  }
+
+  int value;
+  if (transferQuantity == Word)
+    value = getMemoryWord(targetAddress);
+  else
+    value = getMemoryByte(targetAddress);
+  setRegister(destinationRegister, value);
+
+  if (indexingMethod == PostIndexed) {
+    if (offsetDirection == Up)
+      targetAddress = baseAddress + offset;
+    else
+      targetAddress = baseAddress - offset;
+  }
+
+  if (addressWriteBack) setRegister(baseRegister, targetAddress);
 }
 
 void ARMSimulator::Cpu::MOV(Register rd, RightHandOperand op2,
@@ -331,14 +364,15 @@ void ARMSimulator::Cpu::STR(Register sourceRegister, Register baseRegister,
                             IndexingMethod indexingMethod,
                             BarrelShifterConfig shiftConfig) {
   unsigned int baseAddress = getRegister(baseRegister);
-  unsigned int offset = getRightHandOperandValue(offsetOperand);
+  int offset = getRightHandOperandValue(offsetOperand);
   offset = BarrelShifter::executeConfig(offset, shiftConfig).value;
   unsigned int targetAddress = baseAddress;
+
   if (indexingMethod == PreIndexed) {
     if (offsetDirection == Up)
-      targetAddress += offset;
+      targetAddress = baseAddress + offset;
     else
-      targetAddress -= offset;
+      targetAddress = baseAddress - offset;
   }
 
   int value = getRegister(sourceRegister);
@@ -349,9 +383,9 @@ void ARMSimulator::Cpu::STR(Register sourceRegister, Register baseRegister,
 
   if (indexingMethod == PostIndexed) {
     if (offsetDirection == Up)
-      targetAddress += offset;
+      targetAddress = baseAddress + offset;
     else
-      targetAddress += offset;
+      targetAddress = baseAddress - offset;
   }
 
   if (addressWriteBack) setRegister(baseRegister, targetAddress);
