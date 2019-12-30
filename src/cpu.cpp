@@ -64,16 +64,17 @@ void ARMSimulator::Cpu::setMemoryWord(unsigned int address, int value) {
   mem[address] = value >> 24;
   mem[address + 1] = value >> 16 & 0xFF;
   mem[address + 2] = value >> 8 & 0xFF;
-  mem[address] = value & 0xFF;
+  mem[address + 3] = value & 0xFF;
 }
 
-char ARMSimulator::Cpu::getMemoryByte(unsigned int address) {
+unsigned char ARMSimulator::Cpu::getMemoryByte(unsigned int address) {
   if (address >= memSize) throw InvalidMemoryAccessException(address);
 
   return mem[address];
 }
 
-void ARMSimulator::Cpu::setMemoryByte(unsigned int address, char value) {
+void ARMSimulator::Cpu::setMemoryByte(unsigned int address,
+                                      unsigned char value) {
   if (address >= memSize) throw InvalidMemoryAccessException(address);
 
   mem[address] = value;
@@ -322,10 +323,38 @@ void ARMSimulator::Cpu::STM(Register, bool, bool, OffsetDirection,
   throw NotImplementedException("STM");
 }
 
-void ARMSimulator::Cpu::STR(Register, Register, RightHandOperand, bool,
-                            TransferQuantity, OffsetDirection, IndexingMethod,
-                            BarrelShifterConfig) {
-  throw NotImplementedException("STR");
+void ARMSimulator::Cpu::STR(Register sourceRegister, Register baseRegister,
+                            RightHandOperand offsetOperand,
+                            bool addressWriteBack,
+                            TransferQuantity transferQuantity,
+                            OffsetDirection offsetDirection,
+                            IndexingMethod indexingMethod,
+                            BarrelShifterConfig shiftConfig) {
+  unsigned int baseAddress = getRegister(baseRegister);
+  unsigned int offset = getRightHandOperandValue(offsetOperand);
+  offset = BarrelShifter::executeConfig(offset, shiftConfig).value;
+  unsigned int targetAddress = baseAddress;
+  if (indexingMethod == PreIndexed) {
+    if (offsetDirection == Up)
+      targetAddress += offset;
+    else
+      targetAddress -= offset;
+  }
+
+  int value = getRegister(sourceRegister);
+  if (transferQuantity == Word)
+    setMemoryWord(targetAddress, value);
+  else
+    setMemoryByte(targetAddress, value);
+
+  if (indexingMethod == PostIndexed) {
+    if (offsetDirection == Up)
+      targetAddress += offset;
+    else
+      targetAddress += offset;
+  }
+
+  if (addressWriteBack) setRegister(baseRegister, targetAddress);
 }
 
 void ARMSimulator::Cpu::SUB(Register rd, Register r1, RightHandOperand op2,

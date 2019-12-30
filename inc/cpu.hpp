@@ -15,8 +15,8 @@ class Cpu {
 
   int getMemoryWord(unsigned int address);
   void setMemoryWord(unsigned int address, int word);
-  char getMemoryByte(unsigned int address);
-  void setMemoryByte(unsigned int address, char byte);
+  unsigned char getMemoryByte(unsigned int address);
+  void setMemoryByte(unsigned int address, unsigned char byte);
 
   void ADC(Register rd, Register r1, RightHandOperand op2,
            BarrelShifterConfig shiftConfig = {ShiftType::LogicalLeft, 0},
@@ -92,9 +92,10 @@ class Cpu {
            OffsetDirection offsetDirection, IndexingMethod indexingMethod,
            std::vector<Register> registerList);
 
-  void STR(Register rd, Register baseRegister, RightHandOperand offset,
-           bool addressWriteBack, TransferQuantity transferQuantity,
-           OffsetDirection offsetDirection, IndexingMethod indexingMethod,
+  void STR(Register sourceRegister, Register baseRegister,
+           RightHandOperand offset, bool addressWriteBack,
+           TransferQuantity transferQuantity, OffsetDirection offsetDirection,
+           IndexingMethod indexingMethod,
            BarrelShifterConfig shiftConfig = {ShiftType::LogicalLeft, 0});
 
   void SUB(Register rd, Register r1, RightHandOperand op2,
