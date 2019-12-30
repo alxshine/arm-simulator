@@ -444,8 +444,15 @@ void ARMSimulator::Cpu::SUB(Register rd, Register r1, RightHandOperand op2,
 
 void ARMSimulator::Cpu::SWI() { throw NotImplementedException("SWI"); }
 
-void ARMSimulator::Cpu::SWP(Register, Register, Register) {
-  throw NotImplementedException("SWP");
+void ARMSimulator::Cpu::SWP(Register destinationRegister,
+                            Register sourceRegister, Register baseRegister) {
+  unsigned int address = getRegister(baseRegister);
+
+  int memValue = getMemoryWord(address);
+  setRegister(destinationRegister, memValue);
+
+  int sourceVal = getRegister(sourceRegister);
+  setMemoryWord(address, sourceVal);
 }
 
 void ARMSimulator::Cpu::TEQ(Register r1, RightHandOperand op2,

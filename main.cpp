@@ -17,6 +17,9 @@ int main(void) {
   cpu.STM(Register::r1, true, Up, PostIndexed, {Register::r0, Register::r9});
   cpu.LDM(Register::r1, true, Down, PreIndexed, {Register::r2, Register::r3});
 
+  cpu.SWP(Register::r9, Register::r2, Register::r1);
+  cout << hex << cpu.getMemoryWord(0) << endl;
+
   cpu.dumpRegisters();
   return 0;
 }
