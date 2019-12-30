@@ -212,9 +212,25 @@ void ARMSimulator::Cpu::EOR(Register rd, Register r1, RightHandOperand op2,
   }
 }
 
-void ARMSimulator::Cpu::LDM(Register, bool, bool, OffsetDirection,
-                            IndexingMethod, std::vector<Register>) {
-  throw NotImplementedException("LDM");
+void ARMSimulator::Cpu::LDM(Register baseRegister, bool addressWriteBack,
+                            OffsetDirection offsetDirection,
+                            IndexingMethod indexingMethod,
+                            std::vector<Register> registerList) {
+  unsigned int targetAddress = getRegister(baseRegister);
+  int offset;
+  if (offsetDirection == Up)
+    offset = 4;
+  else
+    offset = -4;
+
+  for (Register r : registerList) {
+    if (indexingMethod == PreIndexed) targetAddress += offset;
+    int value = getMemoryWord(targetAddress);
+    setRegister(r, value);
+    if (indexingMethod == PostIndexed) targetAddress += offset;
+  }
+
+  if (addressWriteBack) setRegister(baseRegister, targetAddress);
 }
 
 void ARMSimulator::Cpu::LDR(Register destinationRegister, Register baseRegister,
@@ -351,9 +367,26 @@ void ARMSimulator::Cpu::SBC(Register rd, Register r1, RightHandOperand op2,
   }
 }
 
-void ARMSimulator::Cpu::STM(Register, bool, bool, OffsetDirection,
-                            IndexingMethod, std::vector<Register>) {
-  throw NotImplementedException("STM");
+void ARMSimulator::Cpu::STM(Register baseRegister, bool addressWriteBack,
+                            OffsetDirection offsetDirection,
+                            IndexingMethod indexingMethod,
+                            std::vector<Register> registerList) {
+  unsigned int targetAddress = getRegister(baseRegister);
+  int offset;
+  if (offsetDirection == Up)
+    offset = 4;
+  else
+    offset = -4;
+
+  for (Register r : registerList) {
+    int value = getRegister(r);
+
+    if (indexingMethod == PreIndexed) targetAddress += offset;
+    setMemoryWord(targetAddress, value);
+    if (indexingMethod == PostIndexed) targetAddress += offset;
+  }
+
+  if (addressWriteBack) setRegister(baseRegister, targetAddress);
 }
 
 void ARMSimulator::Cpu::STR(Register sourceRegister, Register baseRegister,

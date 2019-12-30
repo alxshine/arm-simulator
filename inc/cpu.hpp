@@ -50,7 +50,7 @@ class Cpu {
            BarrelShifterConfig shiftConfig = {ShiftType::LogicalLeft, 0},
            bool setFlags = false);
 
-  void LDM(Register baseRegister, bool addressWriteBack, bool forceUserMode,
+  void LDM(Register baseRegister, bool addressWriteBack,
            OffsetDirection offsetDirection, IndexingMethod indexingMethod,
            std::vector<Register> registerList);
 
@@ -89,7 +89,7 @@ class Cpu {
            BarrelShifterConfig shiftConfig = {ShiftType::LogicalLeft, 0},
            bool setFlags = false);
 
-  void STM(Register baseRegister, bool addressWriteBack, bool forceUserMode,
+  void STM(Register baseRegister, bool addressWriteBack,
            OffsetDirection offsetDirection, IndexingMethod indexingMethod,
            std::vector<Register> registerList);
 
