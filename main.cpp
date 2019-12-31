@@ -13,7 +13,7 @@ int main(void) {
   char data[] = "Hello, World!\n";
   int len = 16;
   unsigned int address = 0x100;
-  cpu.setMemory(address, (unsigned char*)data, len);
+  cpu.setMemory(address, (unsigned char *)data, len);
 
   cpu.MOV(Register::r0, 0);
   cpu.MOV(Register::r1, address);
