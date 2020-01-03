@@ -116,6 +116,8 @@ class Cpu {
   void TST(Register r1, RightHandOperand op2,
            BarrelShifterConfig shiftConfig = {ShiftType::LogicalLeft, 0});
 
+  void nextInstruction(unsigned int instructionWord);
+  
  private:
   unsigned int memSize;
   int regs[16];

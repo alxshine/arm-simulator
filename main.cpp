@@ -8,21 +8,19 @@ using namespace ARMSimulator;
 using namespace std;
 
 int main(void) {
-  Cpu cpu(4096);
+  Cpu cpu(4 * 1024 * 1024);
 
   char data[] = "Hello, World!\n";
   int len = 16;
-  unsigned int address = 0x100;
+  unsigned int address = 0x20098;
   cpu.setMemory(address, (unsigned char *)data, len);
 
-  cpu.MOV(Register::r0, 0);
-  cpu.MOV(Register::r1, address);
-  cpu.MOV(Register::r2, len);
-  cpu.MOV(Register::r7, 4);
-  cpu.SWI();
-
-  cpu.MOV(Register::r0, 0);
-  cpu.MOV(Register::r7, 1);
-  cpu.SWI();
+  try {
+    cout << cpu.getRegister(Register::pc) << endl;
+    cpu.nextInstruction(0xe3a0200e);
+  } catch (int returnCode) {
+    cout << "Internal program exited with returncode " << returnCode << endl;
+  }
+  cout << "Execution finished" << endl;
   return 0;
 }

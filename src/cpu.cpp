@@ -2,7 +2,7 @@
 #include "barrel_shifter.hpp"
 #include "exceptions.hpp"
 
-#include <cstdlib>
+// #include <cstdlib>
 #include <iostream>
 
 using namespace std;
@@ -10,7 +10,8 @@ using namespace std;
 bool isNegative(int v) { return v & (1 << 31); }
 
 bool hasOverflow(int result, int v1, int v2) {
-  if (isNegative(v1) != isNegative(v2)) return false;
+  if (isNegative(v1) != isNegative(v2))
+    return false;
 
   return isNegative(result) != isNegative(v1);
 }
@@ -31,8 +32,10 @@ void ARMSimulator::Cpu::dumpRegisters() {
 
   for (int i = 0; i < 16; ++i) {
     cout << "r" << i;
-    if (i == 14) cout << "/lr";
-    if (i == 15) cout << "/pc";
+    if (i == 14)
+      cout << "/lr";
+    if (i == 15)
+      cout << "/pc";
 
     cout << ":\t0x" << hex << regs[i] << dec << endl;
   }
@@ -43,6 +46,12 @@ void ARMSimulator::Cpu::dumpRegisters() {
 
 int ARMSimulator::Cpu::getRegister(Register r) {
   int intRegister = static_cast<int>(r);
+
+  if (r == Register::pc || r == Register::r15) {
+    return regs[15] +
+           8; // when the PC is retrieved, current instruction + 8 is returned
+    // TODO: if pc is used as an operand in a shift, it's ahead by 12
+  }
   return regs[intRegister];
 }
 
@@ -52,7 +61,8 @@ void ARMSimulator::Cpu::setRegister(Register r, int value) {
 }
 
 int ARMSimulator::Cpu::getMemoryWord(unsigned int address) {
-  if (address >= memSize - 4) throw InvalidMemoryAccessException(address);
+  if (address >= memSize - 4)
+    throw InvalidMemoryAccessException(address);
 
   unsigned int b0 = mem[address] << 24;
   unsigned int b1 = mem[address + 1] << 16;
@@ -63,7 +73,8 @@ int ARMSimulator::Cpu::getMemoryWord(unsigned int address) {
 }
 
 void ARMSimulator::Cpu::setMemoryWord(unsigned int address, int value) {
-  if (address >= memSize - 4) throw InvalidMemoryAccessException(address);
+  if (address >= memSize - 4)
+    throw InvalidMemoryAccessException(address);
 
   mem[address] = value >> 24;
   mem[address + 1] = value >> 16 & 0xFF;
@@ -72,14 +83,16 @@ void ARMSimulator::Cpu::setMemoryWord(unsigned int address, int value) {
 }
 
 unsigned char ARMSimulator::Cpu::getMemoryByte(unsigned int address) {
-  if (address >= memSize) throw InvalidMemoryAccessException(address);
+  if (address >= memSize)
+    throw InvalidMemoryAccessException(address);
 
   return mem[address];
 }
 
 void ARMSimulator::Cpu::setMemoryByte(unsigned int address,
                                       unsigned char value) {
-  if (address >= memSize) throw InvalidMemoryAccessException(address);
+  if (address >= memSize)
+    throw InvalidMemoryAccessException(address);
 
   mem[address] = value;
 }
@@ -137,7 +150,8 @@ void ARMSimulator::Cpu::AND(Register rd, Register r1, RightHandOperand op2,
   setRegister(rd, result);
 
   if (setFlags) {
-    if (shiftResult.affectCarry) C = shiftResult.carry;
+    if (shiftResult.affectCarry)
+      C = shiftResult.carry;
     N = isNegative(result);
     Z = result == 0;
   }
@@ -157,7 +171,8 @@ void ARMSimulator::Cpu::BIC(Register rd, Register r1, RightHandOperand op2,
   setRegister(rd, result);
 
   if (setFlags) {
-    if (shiftResult.affectCarry) C = shiftResult.carry;
+    if (shiftResult.affectCarry)
+      C = shiftResult.carry;
     N = isNegative(result);
     Z = result == 0;
   }
@@ -217,7 +232,8 @@ void ARMSimulator::Cpu::EOR(Register rd, Register r1, RightHandOperand op2,
   if (setFlags) {
     N = isNegative(result);
     Z = result == 0;
-    if (shiftResult.affectCarry) C = shiftResult.carry;
+    if (shiftResult.affectCarry)
+      C = shiftResult.carry;
   }
 }
 
@@ -233,13 +249,16 @@ void ARMSimulator::Cpu::LDM(Register baseRegister, bool addressWriteBack,
     offset = -4;
 
   for (Register r : registerList) {
-    if (indexingMethod == PreIndexed) targetAddress += offset;
+    if (indexingMethod == PreIndexed)
+      targetAddress += offset;
     int value = getMemoryWord(targetAddress);
     setRegister(r, value);
-    if (indexingMethod == PostIndexed) targetAddress += offset;
+    if (indexingMethod == PostIndexed)
+      targetAddress += offset;
   }
 
-  if (addressWriteBack) setRegister(baseRegister, targetAddress);
+  if (addressWriteBack)
+    setRegister(baseRegister, targetAddress);
 }
 
 void ARMSimulator::Cpu::LDR(Register destinationRegister, Register baseRegister,
@@ -275,7 +294,8 @@ void ARMSimulator::Cpu::LDR(Register destinationRegister, Register baseRegister,
       targetAddress = baseAddress - offset;
   }
 
-  if (addressWriteBack) setRegister(baseRegister, targetAddress);
+  if (addressWriteBack)
+    setRegister(baseRegister, targetAddress);
 }
 
 void ARMSimulator::Cpu::MOV(Register rd, RightHandOperand op2,
@@ -283,7 +303,8 @@ void ARMSimulator::Cpu::MOV(Register rd, RightHandOperand op2,
   int input = getRightHandOperandValue(op2);
 
   auto shiftResult = BarrelShifter::executeConfig(input, shiftConfig);
-  if (setFlags && shiftResult.affectCarry) C = shiftResult.carry;
+  if (setFlags && shiftResult.affectCarry)
+    C = shiftResult.carry;
 
   setRegister(rd, shiftResult.value);
 }
@@ -299,7 +320,8 @@ void ARMSimulator::Cpu::MVN(Register rd, RightHandOperand op2,
   int result = ~shiftResult.value;
   setRegister(rd, result);
 
-  if (setFlags && shiftResult.affectCarry) C = shiftResult.carry;
+  if (setFlags && shiftResult.affectCarry)
+    C = shiftResult.carry;
 }
 
 void ARMSimulator::Cpu::ORR(Register rd, Register r1, RightHandOperand op2,
@@ -314,7 +336,8 @@ void ARMSimulator::Cpu::ORR(Register rd, Register r1, RightHandOperand op2,
   if (setFlags) {
     N = isNegative(result);
     Z = result == 0;
-    if (shiftResult.affectCarry) C = shiftResult.carry;
+    if (shiftResult.affectCarry)
+      C = shiftResult.carry;
   }
 }
 
@@ -390,12 +413,15 @@ void ARMSimulator::Cpu::STM(Register baseRegister, bool addressWriteBack,
   for (Register r : registerList) {
     int value = getRegister(r);
 
-    if (indexingMethod == PreIndexed) targetAddress += offset;
+    if (indexingMethod == PreIndexed)
+      targetAddress += offset;
     setMemoryWord(targetAddress, value);
-    if (indexingMethod == PostIndexed) targetAddress += offset;
+    if (indexingMethod == PostIndexed)
+      targetAddress += offset;
   }
 
-  if (addressWriteBack) setRegister(baseRegister, targetAddress);
+  if (addressWriteBack)
+    setRegister(baseRegister, targetAddress);
 }
 
 void ARMSimulator::Cpu::STR(Register sourceRegister, Register baseRegister,
@@ -430,7 +456,8 @@ void ARMSimulator::Cpu::STR(Register sourceRegister, Register baseRegister,
       targetAddress = baseAddress - offset;
   }
 
-  if (addressWriteBack) setRegister(baseRegister, targetAddress);
+  if (addressWriteBack)
+    setRegister(baseRegister, targetAddress);
 }
 
 void ARMSimulator::Cpu::SUB(Register rd, Register r1, RightHandOperand op2,
@@ -461,7 +488,8 @@ void ARMSimulator::Cpu::SWI() {
 
     for (int i = 0; i < length; i++) {
       char currentChar = getMemoryByte(address);
-      if (currentChar == 0) break;
+      if (currentChar == 0)
+        break;
 
       if (output == 0)
         std::cout << currentChar;
@@ -472,10 +500,11 @@ void ARMSimulator::Cpu::SWI() {
     }
   } else if (syscall == 1) {
     // exit syscall
-    int returnCode = getRegister(Register::r1);
-    exit(returnCode);
+    int returnCode = getRegister(Register::r0);
+    throw returnCode;
   } else {
-    throw NotImplementedException("SWI");
+    throw NotImplementedException("Syscall " + std::to_string(syscall) +
+                                  " not implemented");
   }
 }
 
@@ -500,7 +529,8 @@ void ARMSimulator::Cpu::TEQ(Register r1, RightHandOperand op2,
 
   N = isNegative(result);
   Z = result == 0;
-  if (shiftResult.affectCarry) C = shiftResult.carry;
+  if (shiftResult.affectCarry)
+    C = shiftResult.carry;
 }
 
 void ARMSimulator::Cpu::TST(Register r1, RightHandOperand op2,
@@ -513,12 +543,14 @@ void ARMSimulator::Cpu::TST(Register r1, RightHandOperand op2,
 
   N = isNegative(result);
   Z = result == 0;
-  if (shiftResult.affectCarry) C = shiftResult.carry;
+  if (shiftResult.affectCarry)
+    C = shiftResult.carry;
 }
 
 int ARMSimulator::Cpu::getRightHandOperandValue(RightHandOperand operand) {
-  if (operand.type == OperandType::Immediate)
+  if (operand.type == OperandType::Immediate) {
     return operand.value.immediate;
-  else
+  } else {
     return getRegister(operand.value.reg);
+  }
 }

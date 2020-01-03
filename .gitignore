@@ -2,3 +2,5 @@ build
 compile_commands.json
 .vscode
 .cquery_cached_index
+*el
+*~
