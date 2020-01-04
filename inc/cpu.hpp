@@ -1,14 +1,13 @@
 #pragma once
-#include "type_definitions.hpp"
 #include "constants.hpp"
 
-#include <vector>
 #include <bitset>
+#include <vector>
 
 namespace ARMSimulator {
 
 class Cpu {
- public:
+public:
   Cpu(unsigned int memorySize);
   void dumpRegisters();
 
@@ -19,7 +18,7 @@ class Cpu {
   void setMemoryWord(unsigned int address, int word);
   unsigned char getMemoryByte(unsigned int address);
   void setMemoryByte(unsigned int address, unsigned char byte);
-  void setMemory(unsigned int startAddress, const unsigned char* bytes,
+  void setMemory(unsigned int startAddress, const unsigned char *bytes,
                  int len);
 
   void ADC(Register rd, Register r1, RightHandOperand op2,
@@ -73,6 +72,7 @@ class Cpu {
   void MSR(Register r1);
 
   // TODO: MUL, MLA
+
   void MVN(Register rd, RightHandOperand op2,
            BarrelShifterConfig shiftConfig = {ShiftType::LogicalLeft, 0},
            bool setFlags = false);
@@ -118,9 +118,9 @@ class Cpu {
   void TST(Register r1, RightHandOperand op2,
            BarrelShifterConfig shiftConfig = {ShiftType::LogicalLeft, 0});
 
-  void nextInstruction(unsigned int instructionWord);
-  
- private:
+  void executeInstruction(unsigned int instructionWord);
+
+private:
   unsigned int memSize;
   int regs[16];
   std::vector<unsigned char> mem;
@@ -129,4 +129,4 @@ class Cpu {
   int getRightHandOperandValue(RightHandOperand operand);
   static DataProcessingOperation decodeDataProcessing(std::bitset<32> bits);
 };
-}  // namespace ARMSimulator
+} // namespace ARMSimulator

@@ -1,5 +1,5 @@
 #pragma once
-#include "type_definitions.hpp"
+#include "constants.hpp"
 
 namespace ARMSimulator {
   namespace BarrelShifter{

@@ -5,6 +5,7 @@
 #include <bitset>
 #include <iostream>
 #include <sstream>
+#include <string>
 
 using namespace std;
 
@@ -58,7 +59,7 @@ ARMSimulator::Cpu::decodeDataProcessing(bitset<32> bits) {
   throw NotImplementedException(errorStream.str());
 }
 
-void ARMSimulator::Cpu::nextInstruction(unsigned int instructionWord) {
+void ARMSimulator::Cpu::executeInstruction(unsigned int instructionWord) {
 
   unsigned int condition = instructionWord >> FLAG_SHIFT;
 
@@ -126,8 +127,8 @@ void ARMSimulator::Cpu::nextInstruction(unsigned int instructionWord) {
     cout << "Data processing" << endl;
     auto decodedOperation = decodeDataProcessing(instructionBits);
     bool setFlags = instructionBits[20];
-    unsigned int rn = (instructionWord >> 16) & 0xF;
-    unsigned int rd = (instructionWord >> 12) & 0xF;
+    Register rn = getRegisterFromInt((instructionWord >> 16) & 0xF);
+    Register rd = getRegisterFromInt((instructionWord >> 12) & 0xF);
 
     RightHandOperand op2;
     BarrelShifterConfig shiftConfig;
@@ -145,6 +146,68 @@ void ARMSimulator::Cpu::nextInstruction(unsigned int instructionWord) {
       op2 = {value};
       shiftConfig.type = RotateRight;
       shiftConfig.shiftAmount = (instructionWord >> 8) & 0x7;
+    }
+
+    switch (decodedOperation) {
+    case DataProcessingOperation::BitwiseAND:
+      AND(rd, rn, op2, shiftConfig, setFlags);
+      break;
+    case DataProcessingOperation::BitwiseEOR:
+      EOR(rd, rn, op2, shiftConfig, setFlags);
+      break;
+    case DataProcessingOperation::Subtract:
+      SUB(rd, rn, op2, shiftConfig, setFlags);
+      break;
+    case DataProcessingOperation::ReverseSubtract:
+      RSB(rd, rn, op2, shiftConfig, setFlags);
+      break;
+    case DataProcessingOperation::Add:
+      ADD(rd, rn, op2, shiftConfig, setFlags);
+      break;
+    case DataProcessingOperation::AddWithCarry:
+      ADC(rd, rn, op2, shiftConfig, setFlags);
+      break;
+    case DataProcessingOperation::SubtractWithCarry:
+      throw NotImplementedException(
+          "SubtractWithCarry currently not implemented");
+    case DataProcessingOperation::ReverseSubtractWithCarry:
+      throw NotImplementedException(
+          "ReverseSubtractWithCarry currently not implemented");
+    case DataProcessingOperation::MiscellaneousInstruction:
+      throw NotImplementedException(
+          "Miscellaneous instructions currently not implemented");
+    case DataProcessingOperation::HalfwordMultiply:
+    case DataProcessingOperation::Multiply:
+      throw NotImplementedException("Multiplication currently not implemented");
+    case DataProcessingOperation::Test:
+      TST(rn, op2);
+      break;
+    case DataProcessingOperation::TestEquivalence:
+      TEQ(rn, op2);
+      break;
+    case DataProcessingOperation::Compare:
+      CMP(rn, op2);
+      break;
+    case DataProcessingOperation::CompareNegative:
+      CMN(rn, op2);
+      break;
+    case DataProcessingOperation::BitwiseOR:
+      ORR(rd, rn, op2, shiftConfig, setFlags);
+      break;
+    case DataProcessingOperation::Move:
+      // A2 encoding (MOVW) is not implemented on purpose
+      MOV(rd, op2, shiftConfig, setFlags);
+      break;
+    case DataProcessingOperation::BitwiseBitClear:
+      BIC(rd, rn, op2, shiftConfig, setFlags);
+      break;
+    case DataProcessingOperation::BitwiseNOT:
+      MVN(rd, op2, shiftConfig, setFlags);
+      break;
+    default:
+      throw NotImplementedException("Unknown operation " +
+                                    to_string((int)decodedOperation));
+      break;
     }
   } else if (!instructionBits[27] && instructionBits[26]) {
     if (instructionBits[25] && instructionBits[24])

@@ -1,6 +1,6 @@
 #include "barrel_shifter.hpp"
+#include "constants.hpp"
 #include "cpu.hpp"
-#include "type_definitions.hpp"
 
 #include <iostream>
 
@@ -16,11 +16,22 @@ int main(void) {
   cpu.setMemory(address, (unsigned char *)data, len);
 
   try {
-    cout << cpu.getRegister(Register::pc) << endl;
-    cpu.nextInstruction(0xe3a0200e);
+    cpu.dumpRegisters();
+    cpu.executeInstruction(0xe3a00000);
+    cpu.executeInstruction(0xe59f1014);
+    cpu.executeInstruction(0xe3a0200e);
+    cpu.executeInstruction(0xe3a07004);
+    cpu.executeInstruction(0xef000000);
+    cpu.dumpRegisters();
+
+    cpu.executeInstruction(0xe3a00000);
+    cpu.executeInstruction(0xe3a07001);
+    cpu.executeInstruction(0xef000000);
+    cpu.dumpRegisters();
   } catch (int returnCode) {
     cout << "Internal program exited with returncode " << returnCode << endl;
   }
+
   cout << "Execution finished" << endl;
   return 0;
 }

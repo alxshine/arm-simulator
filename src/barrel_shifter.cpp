@@ -1,5 +1,5 @@
 #include "barrel_shifter.hpp"
-#include "type_definitions.hpp"
+#include "constants.hpp"
 
 ARMSimulator::BarrelShifterReturn ARMSimulator::BarrelShifter::logicalShiftLeft(
     int input, short shiftAmount) {
