@@ -59,6 +59,100 @@ ARMSimulator::Cpu::decodeDataProcessing(bitset<32> bits) {
   throw NotImplementedException(errorStream.str());
 }
 
+void ARMSimulator::Cpu::executeDataProcessingInstruction(
+    unsigned int instructionWord) {
+  bitset<32> instructionBits{instructionWord};
+
+  auto decodedOperation = decodeDataProcessing(instructionBits);
+  bool setFlags = instructionBits[20];
+  Register rn = getRegisterFromInt((instructionWord >> 16) & 0xF);
+  Register rd = getRegisterFromInt((instructionWord >> 12) & 0xF);
+
+  RightHandOperand op2;
+  BarrelShifterConfig shiftConfig;
+
+  if (!instructionBits[25]) {
+    // register
+    int rm = instructionWord & 0xF;
+    op2 = RightHandOperand{OperandType::Register, rm};
+
+    int shiftTypeBits = (instructionWord >> 5) & 0x3;
+    shiftConfig.type = (ShiftType)shiftTypeBits;
+    int shiftAmount = (instructionWord >> 7) & 0x1F;
+    shiftConfig.shiftAmount = shiftAmount;
+  } else {
+    // immediate
+    int value = instructionWord & 0x7F;
+    op2 = {value};
+    shiftConfig.type = RotateRight;
+    shiftConfig.shiftAmount =
+        ((instructionWord >> 8) & 0x7) *
+        2; // immediates can only be shifted by multiples of 2
+  }
+
+  switch (decodedOperation) {
+  case DataProcessingOperation::BitwiseAND:
+    AND(rd, rn, op2, shiftConfig, setFlags);
+    break;
+  case DataProcessingOperation::BitwiseEOR:
+    EOR(rd, rn, op2, shiftConfig, setFlags);
+    break;
+  case DataProcessingOperation::Subtract:
+    SUB(rd, rn, op2, shiftConfig, setFlags);
+    break;
+  case DataProcessingOperation::ReverseSubtract:
+    RSB(rd, rn, op2, shiftConfig, setFlags);
+    break;
+  case DataProcessingOperation::Add:
+    ADD(rd, rn, op2, shiftConfig, setFlags);
+    break;
+  case DataProcessingOperation::AddWithCarry:
+    ADC(rd, rn, op2, shiftConfig, setFlags);
+    break;
+  case DataProcessingOperation::SubtractWithCarry:
+    throw NotImplementedException(
+        "SubtractWithCarry currently not implemented");
+  case DataProcessingOperation::ReverseSubtractWithCarry:
+    throw NotImplementedException(
+        "ReverseSubtractWithCarry currently not implemented");
+  case DataProcessingOperation::MiscellaneousInstruction:
+    throw NotImplementedException(
+        "Miscellaneous instructions currently not implemented");
+  case DataProcessingOperation::HalfwordMultiply:
+  case DataProcessingOperation::Multiply:
+    throw NotImplementedException("Multiplication currently not implemented");
+  case DataProcessingOperation::Test:
+    TST(rn, op2);
+    break;
+  case DataProcessingOperation::TestEquivalence:
+    TEQ(rn, op2);
+    break;
+  case DataProcessingOperation::Compare:
+    CMP(rn, op2);
+    break;
+  case DataProcessingOperation::CompareNegative:
+    CMN(rn, op2);
+    break;
+  case DataProcessingOperation::BitwiseOR:
+    ORR(rd, rn, op2, shiftConfig, setFlags);
+    break;
+  case DataProcessingOperation::Move:
+    // A2 encoding (MOVW) is not implemented on purpose
+    MOV(rd, op2, shiftConfig, setFlags);
+    break;
+  case DataProcessingOperation::BitwiseBitClear:
+    BIC(rd, rn, op2, shiftConfig, setFlags);
+    break;
+  case DataProcessingOperation::BitwiseNOT:
+    MVN(rd, op2, shiftConfig, setFlags);
+    break;
+  default:
+    throw NotImplementedException("Unknown operation " +
+                                  to_string((int)decodedOperation));
+    break;
+  }
+}
+
 void ARMSimulator::Cpu::executeInstruction(unsigned int instructionWord) {
 
   unsigned int condition = instructionWord >> FLAG_SHIFT;
@@ -125,15 +219,44 @@ void ARMSimulator::Cpu::executeInstruction(unsigned int instructionWord) {
 
   if (!instructionBits[27] && !instructionBits[26]) {
     cout << "Data processing" << endl;
-    auto decodedOperation = decodeDataProcessing(instructionBits);
-    bool setFlags = instructionBits[20];
-    Register rn = getRegisterFromInt((instructionWord >> 16) & 0xF);
-    Register rd = getRegisterFromInt((instructionWord >> 12) & 0xF);
+    executeDataProcessingInstruction(instructionWord);
+  } else if (!instructionBits[27] && instructionBits[26]) {
+    if ((instructionBits[25] && instructionBits[24]) ||
+        (instructionBits[25] && instructionBits[4]))
+      throw NotImplementedException(
+          "Media instructions are not planned for now");
 
+    cout << "Load/Store" << endl;
+    int intRn = (instructionWord >> 16) & 0xF;
+    int intRt = (instructionWord >> 12) & 0xF;
+    Register rn = getRegisterFromInt(intRn);
+    Register rt = getRegisterFromInt(intRt);
     RightHandOperand op2;
     BarrelShifterConfig shiftConfig;
 
+    bool P = instructionBits[24];
+    bool U = instructionBits[23];
+    bool W = instructionBits[21];
+    IndexingMethod indexingMethod = P ? PreIndexed : PostIndexed;
+    OffsetDirection offsetDirection = U ? Up : Down;
+    bool writeBack = !P || W;
+    TransferQuantity transferQuantity = instructionBits[22] ? Byte : Word;
+    bool load = instructionBits[20];
+
     if (!instructionBits[25]) {
+      cout << "Offset is immediate" << endl;
+
+      // immediate
+      int value = instructionWord & 0x7F;
+      op2 = {value};
+      shiftConfig.type = RotateRight;
+      shiftConfig.shiftAmount =
+          ((instructionWord >> 8) & 0x7) *
+          2; // immediates can only be shifted by multiples of 2
+    } else {
+      cout << "Offset is register" << endl;
+
+      // register
       int rm = instructionWord & 0xF;
       op2 = RightHandOperand{OperandType::Register, rm};
 
@@ -141,84 +264,22 @@ void ARMSimulator::Cpu::executeInstruction(unsigned int instructionWord) {
       shiftConfig.type = (ShiftType)shiftTypeBits;
       int shiftAmount = (instructionWord >> 7) & 0x1F;
       shiftConfig.shiftAmount = shiftAmount;
+    }
+
+    if (load) {
+      LDR(rt, rn, op2, writeBack, transferQuantity, offsetDirection,
+          indexingMethod, shiftConfig);
     } else {
-      int value = instructionWord & 0x7F;
-      op2 = {value};
-      shiftConfig.type = RotateRight;
-      shiftConfig.shiftAmount = (instructionWord >> 8) & 0x7;
+      STR(rt, rn, op2, writeBack, transferQuantity, offsetDirection,
+          indexingMethod, shiftConfig);
     }
 
-    switch (decodedOperation) {
-    case DataProcessingOperation::BitwiseAND:
-      AND(rd, rn, op2, shiftConfig, setFlags);
-      break;
-    case DataProcessingOperation::BitwiseEOR:
-      EOR(rd, rn, op2, shiftConfig, setFlags);
-      break;
-    case DataProcessingOperation::Subtract:
-      SUB(rd, rn, op2, shiftConfig, setFlags);
-      break;
-    case DataProcessingOperation::ReverseSubtract:
-      RSB(rd, rn, op2, shiftConfig, setFlags);
-      break;
-    case DataProcessingOperation::Add:
-      ADD(rd, rn, op2, shiftConfig, setFlags);
-      break;
-    case DataProcessingOperation::AddWithCarry:
-      ADC(rd, rn, op2, shiftConfig, setFlags);
-      break;
-    case DataProcessingOperation::SubtractWithCarry:
-      throw NotImplementedException(
-          "SubtractWithCarry currently not implemented");
-    case DataProcessingOperation::ReverseSubtractWithCarry:
-      throw NotImplementedException(
-          "ReverseSubtractWithCarry currently not implemented");
-    case DataProcessingOperation::MiscellaneousInstruction:
-      throw NotImplementedException(
-          "Miscellaneous instructions currently not implemented");
-    case DataProcessingOperation::HalfwordMultiply:
-    case DataProcessingOperation::Multiply:
-      throw NotImplementedException("Multiplication currently not implemented");
-    case DataProcessingOperation::Test:
-      TST(rn, op2);
-      break;
-    case DataProcessingOperation::TestEquivalence:
-      TEQ(rn, op2);
-      break;
-    case DataProcessingOperation::Compare:
-      CMP(rn, op2);
-      break;
-    case DataProcessingOperation::CompareNegative:
-      CMN(rn, op2);
-      break;
-    case DataProcessingOperation::BitwiseOR:
-      ORR(rd, rn, op2, shiftConfig, setFlags);
-      break;
-    case DataProcessingOperation::Move:
-      // A2 encoding (MOVW) is not implemented on purpose
-      MOV(rd, op2, shiftConfig, setFlags);
-      break;
-    case DataProcessingOperation::BitwiseBitClear:
-      BIC(rd, rn, op2, shiftConfig, setFlags);
-      break;
-    case DataProcessingOperation::BitwiseNOT:
-      MVN(rd, op2, shiftConfig, setFlags);
-      break;
-    default:
-      throw NotImplementedException("Unknown operation " +
-                                    to_string((int)decodedOperation));
-      break;
-    }
-  } else if (!instructionBits[27] && instructionBits[26]) {
-    if (instructionBits[25] && instructionBits[24])
-      throw NotImplementedException(
-          "Media instructions are not planned for now");
-
-    cout << "Load/Store" << endl;
   } else if (instructionBits[27] && !instructionBits[26]) {
     cout << "Branching and block data transfer" << endl;
   } else if (instructionBits[27] && instructionBits[26]) {
     cout << "Coprocessor instructions and supervisor call" << endl;
   }
+
+  regs[15] += 4; // increment PC
   // check
 }

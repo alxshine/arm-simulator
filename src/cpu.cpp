@@ -2,7 +2,6 @@
 #include "barrel_shifter.hpp"
 #include "exceptions.hpp"
 
-// #include <cstdlib>
 #include <iostream>
 
 using namespace std;
@@ -47,7 +46,7 @@ void ARMSimulator::Cpu::dumpRegisters() {
 int ARMSimulator::Cpu::getRegister(Register r) {
   int intRegister = static_cast<int>(r);
 
-  if (r == Register::pc || r == Register::r15) {
+  if (r == Register::pc) {
     return regs[15] +
            8; // when the PC is retrieved, current instruction + 8 is returned
     // TODO: if pc is used as an operand in a shift, it's ahead by 12
@@ -271,6 +270,10 @@ void ARMSimulator::Cpu::LDR(Register destinationRegister, Register baseRegister,
   unsigned int baseAddress = getRegister(baseRegister);
   int offset = getRightHandOperandValue(offsetOperand);
   offset = BarrelShifter::executeConfig(offset, shiftConfig).value;
+  if (baseRegister == Register::pc)
+    offset +=
+        4; // this is a hack for weird behaviour when addressing relative to PC
+  
   unsigned int targetAddress = baseAddress;
 
   if (indexingMethod == PreIndexed) {
@@ -434,6 +437,9 @@ void ARMSimulator::Cpu::STR(Register sourceRegister, Register baseRegister,
   unsigned int baseAddress = getRegister(baseRegister);
   int offset = getRightHandOperandValue(offsetOperand);
   offset = BarrelShifter::executeConfig(offset, shiftConfig).value;
+  if (baseRegister == Register::pc)
+    offset +=
+        4; // this is a hack for weird behaviour when addressing relative to PC
   unsigned int targetAddress = baseAddress;
 
   if (indexingMethod == PreIndexed) {

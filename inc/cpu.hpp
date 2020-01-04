@@ -128,5 +128,6 @@ private:
 
   int getRightHandOperandValue(RightHandOperand operand);
   static DataProcessingOperation decodeDataProcessing(std::bitset<32> bits);
+  void executeDataProcessingInstruction(unsigned int instructionWord);
 };
 } // namespace ARMSimulator
