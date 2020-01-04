@@ -1,7 +1,9 @@
 #pragma once
 #include "type_definitions.hpp"
+#include "constants.hpp"
 
 #include <vector>
+#include <bitset>
 
 namespace ARMSimulator {
 
@@ -125,5 +127,6 @@ class Cpu {
   bool N, Z, C, V;
 
   int getRightHandOperandValue(RightHandOperand operand);
+  static DataProcessingOperation decodeDataProcessing(std::bitset<32> bits);
 };
 }  // namespace ARMSimulator

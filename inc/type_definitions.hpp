@@ -23,7 +23,7 @@ enum class Register {
   pc = 15
 };
 
-enum class ShiftType {
+enum ShiftType {
   LogicalLeft,
   LogicalRight,
   ArithmeticRight,
@@ -58,10 +58,14 @@ struct RightHandOperand {
   OperandType type;
   union Op2Value value;
 
+  RightHandOperand() : type{OperandType::Immediate}, value{0} {}
+
   RightHandOperand(int immediate)
       : type(OperandType::Immediate), value{immediate} {}
 
   RightHandOperand(Register reg) : type(OperandType::Register), value{reg} {}
+
+  RightHandOperand(OperandType type, int val) : type{type}, value{val} {}
 };
 
 enum OffsetDirection { Down = 0, Up = 1 };
@@ -69,4 +73,4 @@ enum OffsetDirection { Down = 0, Up = 1 };
 enum TransferQuantity { Word = 0, Byte = 1 };
 
 enum IndexingMethod { PostIndexed = 0, PreIndexed = 1 };
-}  // namespace ARMSimulator
+} // namespace ARMSimulator

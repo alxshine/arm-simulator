@@ -1,11 +1,66 @@
 #include "constants.hpp"
 #include "cpu.hpp"
+#include "exceptions.hpp"
 
+#include <bitset>
 #include <iostream>
+#include <sstream>
+
+using namespace std;
+
+ARMSimulator::DataProcessingOperation
+ARMSimulator::Cpu::decodeDataProcessing(bitset<32> bits) {
+  if (!bits[24] && !bits[23] && !bits[22] && !bits[21])
+    return DataProcessingOperation::BitwiseAND;
+  if (!bits[24] && !bits[23] && !bits[22] && bits[21])
+    return DataProcessingOperation::BitwiseEOR;
+  if (!bits[24] && !bits[23] && bits[22] && !bits[21])
+    return DataProcessingOperation::Subtract;
+  if (!bits[24] && !bits[23] && bits[22] && bits[21])
+    return DataProcessingOperation::ReverseSubtract;
+  if (!bits[24] && bits[23] && !bits[22] && !bits[21])
+    return DataProcessingOperation::Add;
+  if (!bits[24] && bits[23] && !bits[22] && bits[21])
+    return DataProcessingOperation::AddWithCarry;
+  if (!bits[24] && bits[23] && bits[22] && !bits[21])
+    return DataProcessingOperation::SubtractWithCarry;
+  if (!bits[24] && bits[23] && bits[22] && bits[21])
+    return DataProcessingOperation::ReverseSubtractWithCarry;
+
+  if (bits[24] && !bits[23] && !bits[20]) {
+    // data processing and miscellaneous instructions
+    if (!bits[7])
+      throw NotImplementedException(
+          "Miscellaneous instructions not implemented");
+    return DataProcessingOperation::HalfwordMultiply;
+  }
+
+  if (bits[24] && !bits[23] && !bits[22] && !bits[21])
+    return DataProcessingOperation::Test;
+  if (bits[24] && !bits[23] && !bits[22] && bits[21])
+    return DataProcessingOperation::TestEquivalence;
+  if (bits[24] && !bits[23] && bits[22] && !bits[21])
+    return DataProcessingOperation::Compare;
+  if (bits[24] && !bits[23] && bits[22] && bits[21])
+    return DataProcessingOperation::CompareNegative;
+  if (bits[24] && bits[23] && !bits[22] && !bits[21])
+    return DataProcessingOperation::BitwiseOR;
+  if (bits[24] && bits[23] && !bits[22] && bits[21])
+    return DataProcessingOperation::Move;
+  if (bits[24] && bits[23] && bits[22] && !bits[21])
+    return DataProcessingOperation::BitwiseBitClear;
+  if (bits[24] && bits[23] && bits[22] && bits[21])
+    return DataProcessingOperation::BitwiseNOT;
+
+  std::stringstream errorStream;
+  errorStream << "Unknown Data Processing operation bits " << bits[24]
+              << bits[23] << bits[22] << bits[21];
+  throw NotImplementedException(errorStream.str());
+}
 
 void ARMSimulator::Cpu::nextInstruction(unsigned int instructionWord) {
 
-  unsigned char condition = (instructionWord & FLAG_MASK) >> 27;
+  unsigned int condition = instructionWord >> FLAG_SHIFT;
 
   bool execute = true;
   switch (condition) {
@@ -55,12 +110,52 @@ void ARMSimulator::Cpu::nextInstruction(unsigned int instructionWord) {
     // always execute
     break;
   default:
-    std::cout << "Unknown condition code " << std::hex << (int)condition
-              << std::endl;
-    break;
+    stringstream errorText;
+    errorText << "Unknown condition code 0x" << hex << condition;
+    throw NotImplementedException(errorText.str());
   }
 
-  if (execute) {
+  if (!execute) {
+    regs[15] += 4; // increment PC
+    return;
   }
-  regs[15] += 4; // load next instruction
+
+  bitset<32> instructionBits{instructionWord};
+
+  if (!instructionBits[27] && !instructionBits[26]) {
+    cout << "Data processing" << endl;
+    auto decodedOperation = decodeDataProcessing(instructionBits);
+    bool setFlags = instructionBits[20];
+    unsigned int rn = (instructionWord >> 16) & 0xF;
+    unsigned int rd = (instructionWord >> 12) & 0xF;
+
+    RightHandOperand op2;
+    BarrelShifterConfig shiftConfig;
+
+    if (!instructionBits[25]) {
+      int rm = instructionWord & 0xF;
+      op2 = RightHandOperand{OperandType::Register, rm};
+
+      int shiftTypeBits = (instructionWord >> 5) & 0x3;
+      shiftConfig.type = (ShiftType)shiftTypeBits;
+      int shiftAmount = (instructionWord >> 7) & 0x1F;
+      shiftConfig.shiftAmount = shiftAmount;
+    } else {
+      int value = instructionWord & 0x7F;
+      op2 = {value};
+      shiftConfig.type = RotateRight;
+      shiftConfig.shiftAmount = (instructionWord >> 8) & 0x7;
+    }
+  } else if (!instructionBits[27] && instructionBits[26]) {
+    if (instructionBits[25] && instructionBits[24])
+      throw NotImplementedException(
+          "Media instructions are not planned for now");
+
+    cout << "Load/Store" << endl;
+  } else if (instructionBits[27] && !instructionBits[26]) {
+    cout << "Branching and block data transfer" << endl;
+  } else if (instructionBits[27] && instructionBits[26]) {
+    cout << "Coprocessor instructions and supervisor call" << endl;
+  }
+  // check
 }
