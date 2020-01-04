@@ -12,8 +12,9 @@ int main(void) {
 
   char data[] = "Hello, World!\n";
   int len = 16;
-  unsigned int address = 0x10098;
+  unsigned int address = 0x2009c;
   cpu.setMemory(address, (unsigned char *)data, len);
+  cpu.setMemoryWord(0x10098, 0x2009c);
   cpu.setRegister(Register::pc, 0x10074);
 
   try {
