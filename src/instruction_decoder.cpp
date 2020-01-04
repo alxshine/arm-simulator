@@ -281,6 +281,13 @@ void ARMSimulator::Cpu::executeInstruction(unsigned int instructionWord) {
 
     if (instructionBits[25]) {
       // branching
+
+      unsigned int targetAddress = instructionWord & 0xFFF;
+      if (instructionBits[24])
+        BL(targetAddress);
+      else
+        B(targetAddress);
+      
     } else {
       // load/store multiple
       bool load = instructionBits[20];

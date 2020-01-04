@@ -180,7 +180,8 @@ void ARMSimulator::Cpu::BIC(Register rd, Register r1, RightHandOperand op2,
 void ARMSimulator::Cpu::BL(unsigned int address) {
   int currentProgramCounter = getRegister(Register::pc);
   // store address of next instruction so the return doesn't mess things up
-  int targetProgramCounter = currentProgramCounter + 4;
+  // after getRegister, pc is 8 ahead of current instruction
+  int targetProgramCounter = currentProgramCounter - 4;
   setRegister(Register::lr, targetProgramCounter);
   setRegister(Register::pc, address);
 }
