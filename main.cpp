@@ -8,7 +8,8 @@ using namespace ARMSimulator;
 using namespace std;
 
 int main(void) {
-  Cpu cpu(4 * 1024 * 1024);
+  unsigned long memSize = 4 * 1024 * 1024;
+  Cpu cpu(memSize);
 
   char data[] = "Hello, World!\n";
   int len = 16;
@@ -16,6 +17,7 @@ int main(void) {
   cpu.setMemory(address, (unsigned char *)data, len);
   cpu.setMemoryWord(0x10098, 0x2009c);
   cpu.setRegister(Register::pc, 0x10074);
+  cpu.setRegister(Register::sp, memSize);
 
   try {
     // cpu.dumpRegisters();

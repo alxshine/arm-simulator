@@ -6,6 +6,7 @@
 #include <iostream>
 #include <sstream>
 #include <string>
+#include <vector>
 
 using namespace std;
 
@@ -277,6 +278,28 @@ void ARMSimulator::Cpu::executeInstruction(unsigned int instructionWord) {
 
   } else if (instructionBits[27] && !instructionBits[26]) {
     cout << "Branching and block data transfer" << endl;
+
+    if (instructionBits[25]) {
+      // branching
+    } else {
+      // load/store multiple
+      bool load = instructionBits[20];
+      OffsetDirection offsetDirection = instructionBits[23] ? Up : Down;
+      bool writeBack = instructionBits[21];
+      IndexingMethod indexingMethod =
+          instructionBits[24] ? PreIndexed : PostIndexed;
+
+      int intRn = (instructionWord >> 16) & 0xF;
+      auto baseRegister = getRegisterFromInt(intRn);
+      auto registerList = parseRegisterList(instructionWord & 0xFFFF);
+
+      if (load)
+        LDM(baseRegister, writeBack, offsetDirection, indexingMethod,
+            registerList);
+      else
+        STM(baseRegister, writeBack, offsetDirection, indexingMethod,
+            registerList);
+    }
   } else if (instructionBits[27] && instructionBits[26]) {
     if (instructionBits[25] && instructionBits[24])
       SWI();

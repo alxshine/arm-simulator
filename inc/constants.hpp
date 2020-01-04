@@ -1,5 +1,8 @@
 #pragma once
 
+#include <bitset>
+#include <vector>
+
 namespace ARMSimulator {
 enum class Register {
   r0 = 0,
@@ -19,11 +22,13 @@ enum class Register {
   r14,
   r15,
   // special registers
+  sp = 13,
   lr = 14,
   pc = 15
 };
 
 Register getRegisterFromInt(int intReg);
+std::vector<Register> parseRegisterList(std::bitset<16> registerBits);
 
 enum ShiftType { LogicalLeft, LogicalRight, ArithmeticRight, RotateRight };
 
@@ -116,4 +121,5 @@ enum class DataProcessingOperation {
   BitwiseNOT,
   FormPCRelativeAddress
 };
+
 } // namespace ARMSimulator

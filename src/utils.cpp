@@ -1,6 +1,9 @@
 #include "constants.hpp"
 #include "exceptions.hpp"
 
+#include <bitset>
+#include <vector>
+
 using namespace ARMSimulator;
 
 Register ARMSimulator::getRegisterFromInt(int intReg) {
@@ -40,4 +43,14 @@ Register ARMSimulator::getRegisterFromInt(int intReg) {
   default:
     throw InvalidRegisterException(intReg);
   }
+}
+
+std::vector<Register>
+ARMSimulator::parseRegisterList(std::bitset<16> registerBits) {
+  std::vector<Register> ret;
+  for (int i = 0; i < 16; ++i) {
+    if (registerBits[16 - i])
+      ret.push_back(getRegisterFromInt(i));
+  }
+  return ret;
 }
