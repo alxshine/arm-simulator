@@ -174,8 +174,6 @@ void ARMSimulator::Cpu::executeLoadStoreInstruction(
   bool load = instructionBits[20];
 
   if (!instructionBits[25]) {
-    cout << "Offset is immediate" << endl;
-
     // immediate
     int value = instructionWord & 0x7F;
     op2 = {value};
@@ -184,8 +182,6 @@ void ARMSimulator::Cpu::executeLoadStoreInstruction(
         ((instructionWord >> 8) & 0x7) *
         2; // immediates can only be shifted by multiples of 2
   } else {
-    cout << "Offset is register" << endl;
-
     // register
     int rm = instructionWord & 0xF;
     op2 = RightHandOperand{OperandType::Register, rm};
@@ -270,7 +266,6 @@ void ARMSimulator::Cpu::executeInstruction(unsigned int instructionWord) {
   bitset<32> instructionBits{instructionWord};
 
   if (!instructionBits[27] && !instructionBits[26]) {
-    cout << "Data processing" << endl;
     executeDataProcessingInstruction(instructionWord);
   } else if (!instructionBits[27] && instructionBits[26]) {
     if ((instructionBits[25] && instructionBits[24]) ||
@@ -278,13 +273,16 @@ void ARMSimulator::Cpu::executeInstruction(unsigned int instructionWord) {
       throw NotImplementedException(
           "Media instructions are not planned for now");
 
-    cout << "Load/Store" << endl;
     executeLoadStoreInstruction(instructionWord);
 
   } else if (instructionBits[27] && !instructionBits[26]) {
     cout << "Branching and block data transfer" << endl;
   } else if (instructionBits[27] && instructionBits[26]) {
-    cout << "Coprocessor instructions and supervisor call" << endl;
+    if (instructionBits[25] && instructionBits[24])
+      SWI();
+    else
+      throw NotImplementedException("Coprocessor and Supervisor calls except "
+                                    "for SWI are not planned for now");
   }
 
   regs[15] += 4; // increment PC

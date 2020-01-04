@@ -18,18 +18,18 @@ int main(void) {
   cpu.setRegister(Register::pc, 0x10074);
 
   try {
-    cpu.dumpRegisters();
+    // cpu.dumpRegisters();
     cpu.executeInstruction(0xe3a00000);
     cpu.executeInstruction(0xe59f1014);
     cpu.executeInstruction(0xe3a0200e);
     cpu.executeInstruction(0xe3a07004);
     cpu.executeInstruction(0xef000000);
-    cpu.dumpRegisters();
+    // cpu.dumpRegisters();
 
     cpu.executeInstruction(0xe3a00000);
     cpu.executeInstruction(0xe3a07001);
     cpu.executeInstruction(0xef000000);
-    cpu.dumpRegisters();
+    // cpu.dumpRegisters();
   } catch (int returnCode) {
     cout << "Internal program exited with returncode " << returnCode << endl;
   }
