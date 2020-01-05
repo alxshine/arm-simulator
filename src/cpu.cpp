@@ -36,7 +36,7 @@ void ARMSimulator::Cpu::dumpRegisters() {
     if (i == 15)
       cout << "/pc";
 
-    cout << ":\t0x" << hex << regs[i] << dec << endl;
+    cout << ":\t" << hex << showbase << regs[i] << dec << endl;
   }
   // N Z C V
   cout << "Flags:" << endl
