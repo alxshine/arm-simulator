@@ -8,7 +8,7 @@ namespace ARMSimulator {
 
 class Cpu {
 public:
-  Cpu(unsigned int memorySize);
+  Cpu(unsigned int memorySize, bool isBigEndian = true);
   void dumpRegisters();
 
   int getRegister(Register r);
@@ -124,7 +124,7 @@ private:
   unsigned int memSize;
   int regs[16];
   std::vector<unsigned char> mem;
-  bool N, Z, C, V;
+  bool N, Z, C, V, isBigEndian;
 
   int getRightHandOperandValue(RightHandOperand operand);
   static DataProcessingOperation decodeDataProcessing(std::bitset<32> bits);

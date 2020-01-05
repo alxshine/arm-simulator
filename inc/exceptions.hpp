@@ -22,3 +22,9 @@ public:
       : std::logic_error("Error trying to access register " +
                          std::to_string(intReg)) {}
 };
+
+class IllegalStateException : public std::logic_error {
+public:
+  IllegalStateException(const std::string errorText)
+      : std::logic_error(errorText) {}
+};

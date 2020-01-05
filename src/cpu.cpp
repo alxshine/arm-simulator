@@ -17,8 +17,8 @@ bool hasOverflow(int result, int v1, int v2) {
 
 int getNegative(int input) { return ~input + 1; }
 
-ARMSimulator::Cpu::Cpu(unsigned int memorySize)
-    : memSize{memorySize}, mem(memorySize, 0) {
+ARMSimulator::Cpu::Cpu(unsigned int memorySize, bool isBigEndian)
+    : memSize{memorySize}, mem(memorySize, 0), isBigEndian(isBigEndian) {
   for (int i = 0; i < 16; ++i) {
     regs[i] = 0;
   }
@@ -63,10 +63,18 @@ int ARMSimulator::Cpu::getMemoryWord(unsigned int address) {
   if (address >= memSize - 4)
     throw InvalidMemoryAccessException(address);
 
-  unsigned int b0 = mem[address] << 24;
-  unsigned int b1 = mem[address + 1] << 16;
-  unsigned int b2 = mem[address + 2] << 8;
-  unsigned int b3 = mem[address + 3];
+  unsigned int b0, b1, b2, b3;
+  if (isBigEndian) {
+    b0 = mem[address] << 24;
+    b1 = mem[address + 1] << 16;
+    b2 = mem[address + 2] << 8;
+    b3 = mem[address + 3];
+  } else {
+    b0 = mem[address + 3] << 24;
+    b1 = mem[address + 2] << 16;
+    b2 = mem[address + 1] << 8;
+    b3 = mem[address];
+  }
   unsigned int result = b0 | b1 | b2 | b3;
   return result;
 }
@@ -75,10 +83,17 @@ void ARMSimulator::Cpu::setMemoryWord(unsigned int address, int value) {
   if (address >= memSize - 4)
     throw InvalidMemoryAccessException(address);
 
-  mem[address] = value >> 24;
-  mem[address + 1] = value >> 16 & 0xFF;
-  mem[address + 2] = value >> 8 & 0xFF;
-  mem[address + 3] = value & 0xFF;
+  if (isBigEndian) {
+    mem[address] = value >> 24;
+    mem[address + 1] = value >> 16;
+    mem[address + 2] = value >> 8;
+    mem[address + 3] = value;
+  } else {
+    mem[address + 3] = value >> 24;
+    mem[address + 2] = value >> 16;
+    mem[address + 1] = value >> 8;
+    mem[address + 4] = value;
+  }
 }
 
 unsigned char ARMSimulator::Cpu::getMemoryByte(unsigned int address) {
@@ -274,7 +289,7 @@ void ARMSimulator::Cpu::LDR(Register destinationRegister, Register baseRegister,
   if (baseRegister == Register::pc)
     offset +=
         4; // this is a hack for weird behaviour when addressing relative to PC
-  
+
   unsigned int targetAddress = baseAddress;
 
   if (indexingMethod == PreIndexed) {
