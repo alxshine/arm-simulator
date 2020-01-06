@@ -3,6 +3,7 @@ add_library(simulatorlib
   instruction_decoder.cpp
   barrel_shifter.cpp
   utils.cpp
+  exceptions.cpp
 )
 target_include_directories(simulatorlib PUBLIC ../inc)
 

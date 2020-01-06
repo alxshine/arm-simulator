@@ -43,7 +43,7 @@ int main(int argc, char **argv) {
     return 1;
   }
 
-  if (buffer[0x13] != 0x28) {
+  if (!(buffer[0x13] == 0x28 || buffer[0x12] == 0x28)) {
     cerr << "ELF file " << argv[1] << " was not built for ARM" << endl;
     return 1;
   }
@@ -74,18 +74,20 @@ int main(int argc, char **argv) {
     elfFile.seekg(sectionOffset);
     char sectionBuffer[sectionSize];
     elfFile.read(sectionBuffer, sectionSize);
-    cpu.setMemory(sectionAddress, (unsigned char *)sectionBuffer,
-                  sectionSize);
+    cpu.setMemory(sectionAddress, (unsigned char *)sectionBuffer, sectionSize);
 
     elfFile.seekg(currentPosition);
   }
   elfFile.close();
 
-  try{
-    while(true)
+  try {
+    while (true)
       cpu.nextInstruction();
-  }catch(int returnCode){
+  } catch (int returnCode) {
     cout << "Internal program exited with code " << returnCode << endl;
+  } catch (std::logic_error &e){
+    const char *message = e.what();
+    cout << "Internal error:" << endl << message << endl;
   }
 
   cout << "Execution finished" << endl;
