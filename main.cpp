@@ -10,10 +10,14 @@ using namespace ARMSimulator;
 using namespace std;
 
 int readFromElf(const char *buffer, const unsigned int start,
-                const unsigned int size) {
+                const unsigned int size, bool bigEndian) {
   int ret = 0;
-  for (unsigned int i = 0; i < size; ++i)
-    ret |= (buffer[start + i] & 0xFF) << (size - 1 - i) * 8;
+  if (bigEndian)
+    for (unsigned int i = 0; i < size; ++i)
+      ret |= (buffer[start + i] & 0xFF) << (size - 1 - i) * 8;
+  else
+    for (int i = size - 1; i >= 0; --i)
+      ret |= (buffer[start + i] & 0xFF) << i * 8;
 
   return ret;
 }
@@ -23,9 +27,6 @@ int main(int argc, char **argv) {
     cerr << "Usage: " << argv[0] << " ELF-Filename" << endl;
     return 1;
   }
-
-  unsigned long memSize = 4 * 1024 * 1024;
-  Cpu cpu(memSize);
 
   ifstream elfFile;
   elfFile.open(argv[1], ios::in | ios::binary);
@@ -48,25 +49,30 @@ int main(int argc, char **argv) {
     return 1;
   }
 
-  unsigned int programEntry = readFromElf(buffer, 0x18, 4);
+  bool bigEndian = buffer[0x5] == 2;
+
+  unsigned long memSize = 4 * 1024 * 1024;
+  Cpu cpu(memSize, bigEndian);
+
+  unsigned int programEntry = readFromElf(buffer, 0x18, 4, bigEndian);
   cpu.setRegister(Register::pc, programEntry);
   cpu.setRegister(Register::sp, 0x10000);
 
-  unsigned int sectionHeaderStart = readFromElf(buffer, 0x20, 4);
-  unsigned short sectionHeaderEntrySize = readFromElf(buffer, 0x2E, 2);
-  unsigned short numSectionHeaders = readFromElf(buffer, 0x30, 2);
+  unsigned int sectionHeaderStart = readFromElf(buffer, 0x20, 4, bigEndian);
+  unsigned short sectionHeaderEntrySize = readFromElf(buffer, 0x2E, 2, bigEndian);
+  unsigned short numSectionHeaders = readFromElf(buffer, 0x30, 2, bigEndian);
 
   elfFile.seekg(sectionHeaderStart);
 
   for (int i = 0; i < numSectionHeaders; ++i) {
     elfFile.read(buffer, sectionHeaderEntrySize);
-    int sectionType = readFromElf(buffer, 0x04, 4);
+    int sectionType = readFromElf(buffer, 0x04, 4, bigEndian);
     if (sectionType != 0x01)
       continue;
 
-    int sectionAddress = readFromElf(buffer, 0x0c, 4);
-    int sectionOffset = readFromElf(buffer, 0x10, 4);
-    int sectionSize = readFromElf(buffer, 0x14, 4);
+    int sectionAddress = readFromElf(buffer, 0x0c, 4, bigEndian);
+    int sectionOffset = readFromElf(buffer, 0x10, 4, bigEndian);
+    int sectionSize = readFromElf(buffer, 0x14, 4, bigEndian);
 
     auto currentPosition = elfFile.tellg();
 
@@ -85,7 +91,7 @@ int main(int argc, char **argv) {
       cpu.nextInstruction();
   } catch (int returnCode) {
     cout << "Internal program exited with code " << returnCode << endl;
-  } catch (std::logic_error &e){
+  } catch (std::logic_error &e) {
     const char *message = e.what();
     cout << "Internal error:" << endl << message << endl;
   }
