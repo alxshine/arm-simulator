@@ -118,7 +118,8 @@ public:
   void TST(Register r1, RightHandOperand op2,
            BarrelShifterConfig shiftConfig = {ShiftType::LogicalLeft, 0});
 
-  void executeInstruction(unsigned int instructionWord);
+  bool executeInstruction(unsigned int instructionWord);
+  void nextInstruction();
 
 private:
   unsigned int memSize;
@@ -128,7 +129,7 @@ private:
 
   int getRightHandOperandValue(RightHandOperand operand);
   static DataProcessingOperation decodeDataProcessing(std::bitset<32> bits);
-  void executeDataProcessingInstruction(unsigned int instructionWord);
-  void executeLoadStoreInstruction(unsigned int instructionWord);
+  bool executeDataProcessingInstruction(unsigned int instructionWord);
+  bool executeLoadStoreInstruction(unsigned int instructionWord);
 };
 } // namespace ARMSimulator

@@ -286,9 +286,6 @@ void ARMSimulator::Cpu::LDR(Register destinationRegister, Register baseRegister,
   unsigned int baseAddress = getRegister(baseRegister);
   int offset = getRightHandOperandValue(offsetOperand);
   offset = BarrelShifter::executeConfig(offset, shiftConfig).value;
-  if (baseRegister == Register::pc)
-    offset +=
-        4; // this is a hack for weird behaviour when addressing relative to PC
 
   unsigned int targetAddress = baseAddress;
 

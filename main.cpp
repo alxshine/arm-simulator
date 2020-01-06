@@ -50,6 +50,7 @@ int main(int argc, char **argv) {
 
   unsigned int programEntry = readFromElf(buffer, 0x18, 4);
   cpu.setRegister(Register::pc, programEntry);
+  cpu.setRegister(Register::sp, 0x10000);
 
   unsigned int sectionHeaderStart = readFromElf(buffer, 0x20, 4);
   unsigned short sectionHeaderEntrySize = readFromElf(buffer, 0x2E, 2);
@@ -63,8 +64,8 @@ int main(int argc, char **argv) {
     if (sectionType != 0x01)
       continue;
 
+    int sectionAddress = readFromElf(buffer, 0x0c, 4);
     int sectionOffset = readFromElf(buffer, 0x10, 4);
-    int sectionStartAddress = BASE_ADDRESS + sectionOffset;
     int sectionSize = readFromElf(buffer, 0x14, 4);
 
     auto currentPosition = elfFile.tellg();
@@ -73,14 +74,16 @@ int main(int argc, char **argv) {
     elfFile.seekg(sectionOffset);
     char sectionBuffer[sectionSize];
     elfFile.read(sectionBuffer, sectionSize);
-    cpu.setMemory(sectionStartAddress, (unsigned char *)sectionBuffer,
+    cpu.setMemory(sectionAddress, (unsigned char *)sectionBuffer,
                   sectionSize);
 
     elfFile.seekg(currentPosition);
   }
+  elfFile.close();
 
   try{
-    
+    while(true)
+      cpu.nextInstruction();
   }catch(int returnCode){
     cout << "Internal program exited with code " << returnCode << endl;
   }

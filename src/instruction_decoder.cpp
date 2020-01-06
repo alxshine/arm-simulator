@@ -2,6 +2,7 @@
 #include "cpu.hpp"
 #include "exceptions.hpp"
 
+#include <algorithm>
 #include <bitset>
 #include <iostream>
 #include <sstream>
@@ -60,7 +61,7 @@ ARMSimulator::Cpu::decodeDataProcessing(bitset<32> bits) {
   throw NotImplementedException(errorStream.str());
 }
 
-void ARMSimulator::Cpu::executeDataProcessingInstruction(
+bool ARMSimulator::Cpu::executeDataProcessingInstruction(
     unsigned int instructionWord) {
   bitset<32> instructionBits{instructionWord};
 
@@ -152,9 +153,14 @@ void ARMSimulator::Cpu::executeDataProcessingInstruction(
                                   to_string((int)decodedOperation));
     break;
   }
+
+  if (rd == Register::pc)
+    return true;
+  else
+    return false;
 }
 
-void ARMSimulator::Cpu::executeLoadStoreInstruction(
+bool ARMSimulator::Cpu::executeLoadStoreInstruction(
     unsigned int instructionWord) {
   bitset<32> instructionBits{instructionWord};
 
@@ -200,9 +206,14 @@ void ARMSimulator::Cpu::executeLoadStoreInstruction(
     STR(rt, rn, op2, writeBack, transferQuantity, offsetDirection,
         indexingMethod, shiftConfig);
   }
+
+  if (rt == Register::pc || (writeBack && rn == Register::pc))
+    return true;
+  else
+    return false;
 }
 
-void ARMSimulator::Cpu::executeInstruction(unsigned int instructionWord) {
+bool ARMSimulator::Cpu::executeInstruction(unsigned int instructionWord) {
 
   unsigned int condition = instructionWord >> FLAG_SHIFT;
 
@@ -260,25 +271,22 @@ void ARMSimulator::Cpu::executeInstruction(unsigned int instructionWord) {
   }
 
   if (!execute) {
-    regs[15] += 4; // increment PC
-    return;
+    return false;
   }
 
   bitset<32> instructionBits{instructionWord};
 
   if (!instructionBits[27] && !instructionBits[26]) {
-    executeDataProcessingInstruction(instructionWord);
+    return executeDataProcessingInstruction(instructionWord);
   } else if (!instructionBits[27] && instructionBits[26]) {
     if ((instructionBits[25] && instructionBits[24]) ||
         (instructionBits[25] && instructionBits[4]))
       throw NotImplementedException(
           "Media instructions are not planned for now");
 
-    executeLoadStoreInstruction(instructionWord);
+    return executeLoadStoreInstruction(instructionWord);
 
   } else if (instructionBits[27] && !instructionBits[26]) {
-    cout << "Branching and block data transfer" << endl;
-
     if (instructionBits[25]) {
       // branching
 
@@ -287,7 +295,8 @@ void ARMSimulator::Cpu::executeInstruction(unsigned int instructionWord) {
         BL(targetAddress);
       else
         B(targetAddress);
-      
+
+      return true;
     } else {
       // load/store multiple
       bool load = instructionBits[20];
@@ -306,6 +315,14 @@ void ARMSimulator::Cpu::executeInstruction(unsigned int instructionWord) {
       else
         STM(baseRegister, writeBack, offsetDirection, indexingMethod,
             registerList);
+
+      bool poppedPC = load && find(registerList.begin(), registerList.end(),
+                                   Register::pc) != registerList.end();
+      
+      if (poppedPC || (writeBack && baseRegister == Register::pc))
+        return true;
+      else
+        return false;
     }
   } else if (instructionBits[27] && instructionBits[26]) {
     if (instructionBits[25] && instructionBits[24])
@@ -315,6 +332,14 @@ void ARMSimulator::Cpu::executeInstruction(unsigned int instructionWord) {
                                     "for SWI are not planned for now");
   }
 
-  regs[15] += 4; // increment PC
-  // check
+  return false;
+}
+
+void ARMSimulator::Cpu::nextInstruction(){
+  unsigned int currentPc = regs[15];
+  unsigned int currentInstruction = getMemoryWord(currentPc);
+
+  bool modifiedProgramCounter = executeInstruction(currentInstruction);
+  if(!modifiedProgramCounter)
+    regs[15] += 4;
 }
