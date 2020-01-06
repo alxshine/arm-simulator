@@ -171,8 +171,10 @@ void ARMSimulator::Cpu::AND(Register rd, Register r1, RightHandOperand op2,
   }
 }
 
-void ARMSimulator::Cpu::B(unsigned int address) {
-  setRegister(Register::pc, address);
+void ARMSimulator::Cpu::B(int offset) {
+  offset *= 4; // offsets are given in instructions
+  unsigned int currentPc = getRegister(Register::pc);
+  setRegister(Register::pc, currentPc + offset);
 }
 
 void ARMSimulator::Cpu::BIC(Register rd, Register r1, RightHandOperand op2,
@@ -192,13 +194,13 @@ void ARMSimulator::Cpu::BIC(Register rd, Register r1, RightHandOperand op2,
   }
 }
 
-void ARMSimulator::Cpu::BL(unsigned int address) {
-  int currentProgramCounter = getRegister(Register::pc);
-  // store address of next instruction so the return doesn't mess things up
-  // after getRegister, pc is 8 ahead of current instruction
-  int targetProgramCounter = currentProgramCounter - 4;
-  setRegister(Register::lr, targetProgramCounter);
-  setRegister(Register::pc, address);
+void ARMSimulator::Cpu::BL(int offset) {
+  unsigned int targetInstruction = regs[15] + 4;
+  setRegister(Register::lr, targetInstruction);
+
+  offset *= 4; // offsets are given in instructions
+  unsigned int currentPc = getRegister(Register::pc);
+  setRegister(Register::pc, currentPc + offset);
 }
 
 void ARMSimulator::Cpu::BX(RightHandOperand) {
@@ -263,11 +265,11 @@ void ARMSimulator::Cpu::LDM(Register baseRegister, bool addressWriteBack,
   else
     offset = -4;
 
-  for (Register r : registerList) {
+  for (auto rit = registerList.rbegin(); rit != registerList.rend(); ++rit) {
     if (indexingMethod == PreIndexed)
       targetAddress += offset;
     int value = getMemoryWord(targetAddress);
-    setRegister(r, value);
+    setRegister(*rit, value);
     if (indexingMethod == PostIndexed)
       targetAddress += offset;
   }

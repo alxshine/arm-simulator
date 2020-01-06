@@ -33,13 +33,13 @@ public:
            BarrelShifterConfig shiftConfig = {ShiftType::LogicalLeft, 0},
            bool setFlags = false);
 
-  void B(unsigned int address);
+  void B(int offset);
 
   void BIC(Register rd, Register r1, RightHandOperand op2,
            BarrelShifterConfig shiftConfig = {ShiftType::LogicalLeft, 0},
            bool setFlags = false);
 
-  void BL(unsigned int address);
+  void BL(int offset);
 
   void BX(RightHandOperand address);
 

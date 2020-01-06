@@ -49,7 +49,7 @@ std::vector<Register>
 ARMSimulator::parseRegisterList(std::bitset<16> registerBits) {
   std::vector<Register> ret;
   for (int i = 0; i < 16; ++i) {
-    if (registerBits[16 - i])
+    if (registerBits[i])
       ret.push_back(getRegisterFromInt(i));
   }
   return ret;

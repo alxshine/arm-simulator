@@ -112,8 +112,8 @@ bool ARMSimulator::Cpu::executeDataProcessingInstruction(
     ADC(rd, rn, op2, shiftConfig, setFlags);
     break;
   case DataProcessingOperation::SubtractWithCarry:
-    throw NotImplementedException(
-        "SubtractWithCarry currently not implemented");
+    SBC(rd, rn, op2, shiftConfig, setFlags);
+    break;
   case DataProcessingOperation::ReverseSubtractWithCarry:
     throw NotImplementedException(
         "ReverseSubtractWithCarry currently not implemented");
@@ -327,9 +327,11 @@ bool ARMSimulator::Cpu::executeInstruction(unsigned int instructionWord) {
   } else if (instructionBits[27] && instructionBits[26]) {
     if (instructionBits[25] && instructionBits[24])
       SWI();
-    else
-      throw NotImplementedException("Coprocessor and Supervisor calls except "
-                                    "for SWI are not planned for now");
+    else{
+      stringstream error;
+      error << "Coprocessor calls, instruction is " << hex << showbase << instructionWord;
+      throw NotImplementedException(error.str());
+    }
   }
 
   return false;
