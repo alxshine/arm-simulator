@@ -9,6 +9,15 @@
 using namespace ARMSimulator;
 using namespace std;
 
+int readFromElf(const char *buffer, const unsigned int start,
+                const unsigned int size) {
+  int ret = 0;
+  for (unsigned int i = 0; i < size; ++i)
+    ret |= (buffer[start + i] & 0xFF) << (size - 1 - i) * 8;
+
+  return ret;
+}
+
 int main(int argc, char **argv) {
   if (argc < 2) {
     cerr << "Usage: " << argv[0] << " ELF-Filename" << endl;
@@ -39,29 +48,42 @@ int main(int argc, char **argv) {
     return 1;
   }
 
-  unsigned int programEntry = 0;
-  programEntry |= (buffer[0x18] & 0xFF) << 24;
-  programEntry |= (buffer[0x19] & 0xFF) << 16;
-  programEntry |= (buffer[0x1A] & 0xFF) << 8;
-  programEntry |= buffer[0x1B] & 0xFF;
-
+  unsigned int programEntry = readFromElf(buffer, 0x18, 4);
   cpu.setRegister(Register::pc, programEntry);
 
-  unsigned int sectionHeaderStart = 0;
-  sectionHeaderStart |= (buffer[0x20] & 0xFF) << 24;
-  sectionHeaderStart |= (buffer[0x21] & 0xFF) << 16;
-  sectionHeaderStart |= (buffer[0x22] & 0xFF) << 8;
-  sectionHeaderStart |= buffer[0x23] & 0xFF;
+  unsigned int sectionHeaderStart = readFromElf(buffer, 0x20, 4);
+  unsigned short sectionHeaderEntrySize = readFromElf(buffer, 0x2E, 2);
+  unsigned short numSectionHeaders = readFromElf(buffer, 0x30, 2);
 
-  unsigned short sectionHeaderEntrySize = 0;
-  sectionHeaderEntrySize |= (buffer[0x2E] & 0xFF) << 8;
-  sectionHeaderEntrySize |= buffer[0x2F] & 0xFF;
-
-  unsigned short numSectionHeaders = 0;
-  numSectionHeaders |= (buffer[0x30] & 0xFF) << 8;
-  numSectionHeaders |= buffer[0x31] & 0xFF;
-  
   elfFile.seekg(sectionHeaderStart);
+
+  for (int i = 0; i < numSectionHeaders; ++i) {
+    elfFile.read(buffer, sectionHeaderEntrySize);
+    int sectionType = readFromElf(buffer, 0x04, 4);
+    if (sectionType != 0x01)
+      continue;
+
+    int sectionOffset = readFromElf(buffer, 0x10, 4);
+    int sectionStartAddress = BASE_ADDRESS + sectionOffset;
+    int sectionSize = readFromElf(buffer, 0x14, 4);
+
+    auto currentPosition = elfFile.tellg();
+
+    // load section to memory
+    elfFile.seekg(sectionOffset);
+    char sectionBuffer[sectionSize];
+    elfFile.read(sectionBuffer, sectionSize);
+    cpu.setMemory(sectionStartAddress, (unsigned char *)sectionBuffer,
+                  sectionSize);
+
+    elfFile.seekg(currentPosition);
+  }
+
+  try{
+    
+  }catch(int returnCode){
+    cout << "Internal program exited with code " << returnCode << endl;
+  }
 
   cout << "Execution finished" << endl;
   return 0;
