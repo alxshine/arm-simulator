@@ -54,3 +54,11 @@ ARMSimulator::parseRegisterList(std::bitset<16> registerBits) {
   }
   return ret;
 }
+
+int ARMSimulator::signedExtend(imm12 value) {
+  int orMask = 0;
+  if (value & 0x800)
+    orMask = 0xFFFFF000;
+
+  return (int)value | orMask;
+}

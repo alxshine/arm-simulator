@@ -83,16 +83,21 @@ void ARMSimulator::Cpu::setMemoryWord(unsigned int address, int value) {
   if (address >= memSize - 4)
     throw InvalidMemoryAccessException(address);
 
+  unsigned char b0 = (value >> 24) & 0xFF;
+  unsigned char b1 = (value >> 16) & 0xFF;
+  unsigned char b2 = (value >> 8) & 0xFF;
+  unsigned char b3 = value & 0xFF;
+
   if (isBigEndian) {
-    mem[address] = value >> 24;
-    mem[address + 1] = value >> 16;
-    mem[address + 2] = value >> 8;
-    mem[address + 3] = value;
+    mem[address] = b0;
+    mem[address + 1] = b1;
+    mem[address + 2] = b2;
+    mem[address + 3] = b3;
   } else {
-    mem[address + 3] = value >> 24;
-    mem[address + 2] = value >> 16;
-    mem[address + 1] = value >> 8;
-    mem[address + 4] = value;
+    mem[address] = b3;
+    mem[address + 1] = b2;
+    mem[address + 2] = b1;
+    mem[address + 3] = b0;
   }
 }
 

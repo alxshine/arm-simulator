@@ -290,11 +290,11 @@ bool ARMSimulator::Cpu::executeInstruction(unsigned int instructionWord) {
     if (instructionBits[25]) {
       // branching
 
-      unsigned int targetAddress = instructionWord & 0xFFF;
+      int offset = signedExtend(instructionWord & 0xFFF);
       if (instructionBits[24])
-        BL(targetAddress);
+        BL(offset);
       else
-        B(targetAddress);
+        B(offset);
 
       return true;
     } else {

@@ -126,4 +126,7 @@ const char ELF_MAGIC_NUMBER[] = {0x7f, 0x45, 0x4c, 0x46};
 const int ELF_HEADER_SIZE = 0x34;
 
 const unsigned int BASE_ADDRESS = 0x10000;
+
+using imm12 = short;
+int signedExtend(imm12 value);
 } // namespace ARMSimulator
