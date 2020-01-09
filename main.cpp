@@ -93,6 +93,7 @@ int main(int argc, char **argv) {
     cout << "Internal program exited with code " << returnCode << endl;
   } catch (std::logic_error &e) {
     const char *message = e.what();
+
     cout << "Internal error:" << endl << message << endl;
   }
 

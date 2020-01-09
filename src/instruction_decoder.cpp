@@ -182,12 +182,10 @@ bool ARMSimulator::Cpu::executeLoadStoreInstruction(
 
   if (!instructionBits[25]) {
     // immediate
-    int value = instructionWord & 0x7F;
+    int value = instructionWord & 0xFFF;
     op2 = {value};
-    shiftConfig.type = RotateRight;
-    shiftConfig.shiftAmount =
-        ((instructionWord >> 8) & 0x7) *
-        2; // immediates can only be shifted by multiples of 2
+    shiftConfig.type = ShiftType::LogicalLeft;
+    shiftConfig.shiftAmount = 0;
   } else {
     // register
     int rm = instructionWord & 0xF;
